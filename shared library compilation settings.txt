@@ -3,5 +3,5 @@
 add those to the g++ arguments
 then run ld -shared objfilename.o -o libraryname.so
 on the directory with the .o files(obj)
-libraryname.so us the output
+libraryname.so is the output
 
