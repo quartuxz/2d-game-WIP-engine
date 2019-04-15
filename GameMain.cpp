@@ -337,7 +337,6 @@ void GameMain::gameLoop()
 					m_currentLevel->pickUpGear();
 				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 					if (m_activeMenu != "mainMenu") {
-						m_gameMenus["mainMenu"] = &tempMenu;
 						m_activeMenu = "mainMenu";
 						lastWindowState = m_window.capture();
 					}
