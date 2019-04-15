@@ -45,15 +45,17 @@ void Weapon::m_fire(sf::Vector2f unitVec)
 
 void Weapon::fire(sf::Vector2f unitVec)
 {
+    if(m_magBulletsUsed >= m_wieldingUnit->Amodule->magSize){
+        std::cout << m_wieldingUnit->Amodule->reloadTime << std::endl;
+        if(m_accumulatedFireTime >= m_wieldingUnit->Amodule->reloadTime){
+            m_magBulletsUsed = 0;
+        }
+        return;
+	}
     if(canFire()){
 		m_fire(unitVec);
 		m_accumulatedFireTime = 0;
 		m_magBulletsUsed++;
-	}else if(m_magBulletsUsed >= m_wieldingUnit->Amodule->magSize){
-        if(m_accumulatedFireTime >= m_wieldingUnit->Amodule->reloadTime){
-            m_magBulletsUsed = 0;
-
-        }
 	}
 }
 

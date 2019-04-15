@@ -81,7 +81,7 @@ void ToolTip::makeTooltipForGear(GearPiece gearPiece)
 	   << "bullet speed: " << gearPiece.aModule.bulletSpeed << std::endl
 	   << "bullet duration: " << gearPiece.aModule.bulletDuration << std::endl
 	   << "bullet size: " << gearPiece.aModule.bulletSize << std::endl
-	   << "magazine size: " << gearPiece.aModule.bulletDuration << std::endl
+	   << "magazine size: " << gearPiece.aModule.magSize << std::endl
 	   << "reload time(s): " << gearPiece.aModule.reloadTime << std::endl
 	   << "gold value: " << gearPiece.goldValue << std::endl;
 	sf::Text tempText;

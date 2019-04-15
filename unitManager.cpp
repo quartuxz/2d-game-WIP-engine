@@ -316,6 +316,10 @@ Menu * UnitManager::interact()
 	for (size_t i = 0; i < m_interactables.size(); i++)
 	{
 		if (distance(m_interactables[i].position, m_player->getBody()[0].first) < m_interactDistance) {
+            MarketMenu *tempMarketMenu = dynamic_cast<MarketMenu*>(m_interactables[i].menu);
+            if(tempMarketMenu != nullptr){
+                tempMarketMenu->addToolTips(m_gear);
+            }
 			return m_interactables[i].menu;
 		}
 	}
