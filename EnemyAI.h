@@ -6,7 +6,7 @@
 #include "Weapon.h"
 
 
-#include <python2.7/Python.h>
+#include <Python.h>
 #include <boost/python.hpp>
 #include <cstdlib>
 

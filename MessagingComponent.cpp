@@ -10,6 +10,7 @@ MessageData::~MessageData(){
 }
 
 MessageData::MessageTypes MessageData::stringToMessageType(std::string str){
+	return MessageTypes();
 
 }
 

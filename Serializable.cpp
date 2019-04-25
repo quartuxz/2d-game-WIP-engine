@@ -13,7 +13,7 @@ Serializable::Serializable()
 
 
 std::pair<std::vector<std::string>, tokenizerInfo> tokenizeFromTo(std::string data, unsigned int startingIndex,std::string tokenToToken, std::string from, std::string to){
-
+	return std::pair<std::vector<std::string>, tokenizerInfo>();
 }
 
 

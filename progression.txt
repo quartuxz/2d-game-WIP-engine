@@ -1,4 +1,4 @@
-gearPiece;0;0;chestPiece;1000;200;3;10;3;10;0.05;10;1;3;1;0;0;0;uniques;chestpiece.png;0.5;
+gearPiece;0;0;chestPiece;1000;200;3;10;3;10;0.05;1;3;1;10;0;0;0;uniques;chestpiece.png;0.5;
 attackCard;chestPiece;10;0;0;1;0;0;0;
 defenceCard;chestPiece;0;1;0;1;0;0;0;0;0;0;0;
 gearPiece;0;0;helmet;1000;200;3;10;1;50;0.05;4;1;2;0;0;0;0;asdfe;chestpiece.png;1;

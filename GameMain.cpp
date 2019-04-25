@@ -338,7 +338,7 @@ void GameMain::gameLoop()
 				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 					if (m_activeMenu != "mainMenu") {
 						m_activeMenu = "mainMenu";
-						lastWindowState = m_window.capture();
+						//lastWindowState = m_window.capture();
 					}
 					else {
 						m_activeMenu = "";
@@ -360,7 +360,7 @@ void GameMain::gameLoop()
 							else {
 								m_activeMenu = "interactable";
 								m_gameMenus[m_activeMenu] = tempMenu;
-								lastWindowState = m_window.capture();
+								//lastWindowState = m_window.capture();
 
 							}
 						}

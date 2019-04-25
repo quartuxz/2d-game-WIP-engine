@@ -62,7 +62,7 @@ int factorial(int n)
 
 //python test
 
-#include <python2.7/Python.h>
+#include <Python.h>
 #include <boost/python.hpp>
 #include <cstdlib>
 
@@ -72,6 +72,17 @@ std::vector< T > py_list_to_std_vector( const boost::python::object& iterable )
 {
     return std::vector< T >( boost::python::stl_input_iterator< T >( iterable ),
                              boost::python::stl_input_iterator< T >( ) );
+}
+
+int setenv(const char* name, const char* value, int overwrite)
+{
+	int errcode = 0;
+	if (!overwrite) {
+		size_t envsize = 0;
+		errcode = getenv_s(&envsize, NULL, 0, name);
+		if (errcode || envsize) return errcode;
+	}
+	return _putenv_s(name, value);
 }
 
 //python test
