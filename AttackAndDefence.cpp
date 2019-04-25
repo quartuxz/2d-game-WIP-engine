@@ -64,8 +64,8 @@ void AttackCard::addBehaviour(std::vector<std::string> behaviour)
 	else if(behaviour[0] == "anhilate"){
 
 	}
-	std::cout << behaviour[0].c_str() << std::endl;
-	std::cout << "BEHAVIOUR ADDED" << std::endl;
+	//std::cout << behaviour[0].c_str() << std::endl;
+	//std::cout << "BEHAVIOUR ADDED" << std::endl;
 }
 
 void AttackCard::attack(DefenceModule *module, AttackModule *amodule)

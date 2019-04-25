@@ -32,7 +32,7 @@ MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t
         IDDictionary[it.first] = it.second;
     }
 
-    boost::python::object pyFuncRetVal = pyFunc(false, static_cast<int>(messageType), senderID, intendedReceiverID, paramList, IDDictionary);
+    boost::python::object pyFuncRetVal = pyFunc(false, messageType, senderID, intendedReceiverID, paramList, IDDictionary);
     MessageData retVal;
     int tempMessageType = boost::python::extract<int>(pyFuncRetVal[0]);
     retVal.messageType = static_cast<MessageTypes>(tempMessageType);
@@ -48,7 +48,7 @@ void MessagingComponent::init(std::size_t ID){
 }
 
 void MessagingComponent::processMessage(const MessageData &tempMessage, MessageBus *bus){
-    if(tempMessage.messageType != MessageData::nullMessage){
+    if(tempMessage.messageType != "NULL"){
         pv_processMessage(tempMessage, bus);
     }
 

@@ -46,6 +46,7 @@
     <ClInclude Include="AnimatorSprite.h" />
     <ClInclude Include="AttackAndDefence.h" />
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="cryoscom_defs.h" />
     <ClInclude Include="EnemyAI.h" />
     <ClInclude Include="GameMain.h" />
     <ClInclude Include="Gear.h" />
@@ -68,11 +69,16 @@
     <Image Include="bullet.png" />
     <Image Include="button.png" />
     <Image Include="chestpiece.png" />
+    <Image Include="Cryo_area_2_WIP.png" />
     <Image Include="enemyAI.png" />
     <Image Include="level1.png" />
     <Image Include="level1_v2.png" />
     <Image Include="mapTex.png" />
     <Image Include="player.png" />
+    <Image Include="player_back_left_idle.png" />
+    <Image Include="player_back_right_idle.png" />
+    <Image Include="player_front_left_idle.png" />
+    <Image Include="player_front_right_idle.png" />
     <Image Include="test_map.png" />
     <Image Include="tooltip.png" />
   </ItemGroup>
@@ -87,6 +93,7 @@
     <Font Include="good times rg.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="enemy_test.txt" />
     <Text Include="initial_progression.txt" />
     <Text Include="lootTable1.txt" />
     <Text Include="mainMenu.txt" />
@@ -94,6 +101,7 @@
     <Text Include="map1.txt" />
     <Text Include="map2.txt" />
     <Text Include="master.txt" />
+    <Text Include="oldMap2.txt" />
     <Text Include="progression.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

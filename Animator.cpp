@@ -2,6 +2,7 @@
 #include <Python.h>
 #include <boost/python.hpp>
 #include <cstdlib>
+#include <fstream>
 
 Animator::~Animator()
 {
@@ -11,6 +12,45 @@ Animator::~Animator()
 		delete it->second;
 	}
 
+}
+
+sf::RenderWindow* Animator::getWindow()const {
+
+	return m_window;
+}
+
+void Animator::loadTexturesFromFile(std::string fileName) {
+	std::string line;
+	std::ifstream fileRead(fileName);
+	if (fileRead.is_open()) {
+		while (getline(fileRead, line)) {
+			std::vector<std::string> tokens;
+
+			if (tokens.empty()) {
+				std::string delimiter = ";";
+
+				size_t pos = 0;
+				pos = line.find(delimiter);
+				while (pos != std::string::npos) {
+					tokens.push_back(line.substr(0, pos));
+					line.erase(0, pos + delimiter.length());
+					pos = line.find(delimiter);
+				}
+			}
+
+			if (tokens.empty()) {
+				continue;
+			}
+			else if (tokens[0] == "//") {
+				continue;
+			}
+			if (tokens[0] == "texture") {
+				addTexture(tokens[1]);
+			}
+
+		}
+		fileRead.close();
+	}
 }
 
 std::queue<AnimatorSprite> Animator::m_updateAnimRecursive(std::queue<AnimatorSprite> animation, float timeDelta, AnimatorSprite offset)

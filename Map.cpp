@@ -1,5 +1,11 @@
 #include "Map.h"
 #include <iostream>
+#include "cryoscom_defs.h"
+#if CRYOSCOM_DEBUG
+	#include "Animator.h"
+#endif // CRYOSCOM_DEBUG
+
+
 
 
 
@@ -22,6 +28,19 @@ void Map::update(unit *units)
 {
 	for (size_t o = 0; o < walls.size(); o++)
 	{
+		#if CRYOSCOM_DEBUG
+			sf::VertexArray lines(sf::LinesStrip, 2);
+			lines[0].position = sf::Vector2f(walls[o].wall.first.x, walls[o].wall.first.y);
+			lines[0].color = sf::Color::Magenta;
+			lines[1].position = sf::Vector2f(walls[o].wall.second.x, walls[o].wall.second.y);
+			lines[1].color = sf::Color::Yellow;
+			/*sf::RectangleShape inside;
+			inside.setFillColor(sf::Color::Blue);
+			inside.setSize(sf::Vector2f(10, 10));
+			inside.setPosition(sf::Vector2f(walls[o].inside.x *1, walls[o].inside.y * 1));*/
+			Animator::getInstance().getWindow()->draw(lines);
+		#endif // CRYOSCOM_DEBUG
+
 		auto body = units->getBody();
 		for (size_t p = 0; p < body.size(); p++)
 		{

@@ -3,7 +3,7 @@ import decomposedData_python
 def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramList, IDDictionary):
     inDData0 = decomposedData_python.decomposedData()
     inDData0.createFrom(paramList[0])
-    print inDData0.data[0]
+    print(inDData0.data[0])
 
     counterVal = str(int(inDData0.data[1])+1)
     #print counterVal

@@ -89,8 +89,31 @@ bool unit::isMoving(float threshHold) const
 
 AnimatorSprite unit::getAnimatorSprite()
 {
-	animatorSprite.position = body[0].first;
-	return animatorSprite;
+	AnimatorSprite retVal;
+	retVal = animatorSprite;
+	retVal.position = body[0].first;
+	if (usingCompositeTextures) {
+
+	
+		if (velocity.x <= 0 && velocity.y <= 0) {
+			retVal = back_left_idle;
+		}
+		else if (velocity.x > 0 && velocity.y <= 0) {
+			retVal = back_right_idle;
+		}
+		else if (velocity.x <= 0 && velocity.y > 0) {
+			retVal = front_left_idle;
+		}
+		else{
+			retVal = front_right_idle;
+		}
+		retVal.scale = body[0].second / ((Animator::getInstance().getTexture(retVal.textureID)->getSize().y + Animator::getInstance().getTexture(retVal.textureID)->getSize().x) / 4);
+		retVal.position = body[0].first;
+		retVal.position.y -= body[0].second * 0.5;
+	}
+	
+
+	return retVal;
 }
 
 void unit::setAnimatorSprite(AnimatorSprite aSprite, float additionalScale)
@@ -147,6 +170,32 @@ void unit::kill(){
     move(graveyard);
 }
 
+void unit::collideOne(unit *collider) {
+	if (collider->getID() != ID) {
+		sf::Vector2f evadePos;
+		float collisionVal = collides(*collider, &evadePos);
+		if (collisionVal != -1) {
+			//std::cout << "asd" << std::endl;
+			//direction-of-movement based collision avoidance
+			//evadePos = sf::Vector2f(0, 0);
+			float temp = collisionVal / sqrt(pow(evadePos.x, 2) + pow(evadePos.y, 2));
+			evadePos *= temp;
+			//weight based momentum transfer
+			//colliders[i]->actions.push(std::pair<actionsOnUnit, metaActionData>(moves, -evadePos));
+			collider->move(-evadePos * actualWeight / (actualWeight + collider->actualWeight));
+			move(evadePos * collider->actualWeight / (actualWeight + collider->actualWeight));
+		}
+	}
+
+}
+void unit::m_collide(std::vector<unit*> colliders) {
+	for (size_t i = 0; i < colliders.size(); i++)
+	{
+		collideOne(colliders[i]);
+	}
+
+}
+
 void unit::update(float seconds, std::vector<unit*> colliders)
 {
 
@@ -172,7 +221,7 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 		}
 	}
 
-
+	m_collide(colliders);
 
 
 	if (velocity.x == 0 && velocity.y == 0) {
@@ -187,24 +236,7 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 		animationConroller->rotation = animatorSprite.rotation;
 	}
 
-	for (size_t i = 0; i < colliders.size(); i++)
-	{
-		if (colliders[i]->getID() != ID) {
-			sf::Vector2f evadePos;
-			float collisionVal = collides(*colliders[i], &evadePos);
-			if (collisionVal != -1) {
-				//std::cout << "asd" << std::endl;
-				//direction-of-movement based collision avoidance
-				//evadePos = sf::Vector2f(0, 0);
-				float temp = collisionVal / sqrt(pow(evadePos.x, 2) + pow(evadePos.y, 2));
-				evadePos *= temp;
-				//weight based momentum transfer
-				//colliders[i]->actions.push(std::pair<actionsOnUnit, metaActionData>(moves, -evadePos));
-				colliders[i]->move(-evadePos*actualWeight/(actualWeight + colliders[i]->actualWeight));
-				move(evadePos* colliders[i]->actualWeight / (actualWeight + colliders[i]->actualWeight));
-			}
-		}
-	}
+	
 
 	if (Dmodule != nullptr) {
 		Dmodule->hitPoints -= (Dmodule->damageTakenPerSecond *seconds);

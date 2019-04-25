@@ -161,22 +161,22 @@ int main()
 //
 //    }
     //messaging test
-//    MessageBus onlyBus;
-//    Interactable *tempInteractable = new Interactable();
-//    tempInteractable->createFromFile("test_GS");
-//    onlyBus.addMessagingComponent(tempInteractable);
-//    MessageData *MData = new MessageData();
-//    MData->senderID = 0;
-//    MData->intendedReceiverID = 0;
-//    MData->messageContents.push_back(decomposedData().setType("printable").setName("hello_printable").addData("hello").addData("0"));
-//    onlyBus.addMessage(MData);
-//
-//    while(true){
-//        onlyBus.notify();
-//    }
-//
-//    //messaging test
-//    //python test
+    //MessageBus onlyBus;
+    //Interactable *tempInteractable = new Interactable();
+    //tempInteractable->createFromFile("test_GS");
+    //onlyBus.addMessagingComponent(tempInteractable);
+    //MessageData *MData = new MessageData();
+    //MData->senderID = 0;
+    //MData->intendedReceiverID = 0;
+    //MData->messageContents.push_back(decomposedData().setType("printable").setName("hello_printable").addData("hello").addData("0"));
+    //onlyBus.addMessage(MData);
+
+    //while(true){
+    //    onlyBus.notify();
+    //}
+
+    //messaging test
+    //python test
 //
 //
 //    namespace python = boost::python;

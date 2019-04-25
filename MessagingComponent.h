@@ -18,7 +18,7 @@ struct MessageData{
     MessageData(std::string, std::string);
     ~MessageData();
 
-    MessageTypes messageType;
+    std::string messageType;
     std::size_t senderID;
     std::size_t intendedReceiverID;
 
@@ -27,7 +27,7 @@ struct MessageData{
 
     MessageData processPythonFunc(boost::python::object&, size_t, const std::map<std::string, size_t>&)const;
 
-    inline MessageData setMessageType(MessageTypes type){
+    inline MessageData setMessageType(std::string type){
             messageType = type;
             return *this;
     }

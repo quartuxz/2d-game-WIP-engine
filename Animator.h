@@ -62,12 +62,16 @@ public:
 	Animator(Animator const&) = delete;
 	void operator=(Animator const&) = delete;
 
+	sf::RenderWindow *getWindow()const;
+
 	void clearTextures();
 
 	void setWindow(sf::RenderWindow *);
 
 	sf::Texture* getTexture(unsigned int);
 
+
+	void loadTexturesFromFile(std::string);
 	//pass the name of the texture file, returns the unique ID of the texture
 	unsigned int addTexture(std::string);
 	//pass the ID of the texture you wish to instanciate, together with the position you want to draw it on, its draw layer and its scale

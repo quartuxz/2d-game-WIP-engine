@@ -328,6 +328,7 @@ Menu * UnitManager::interact()
 
 UnitManager::UnitManager()
 {
+	m_map = new Map();
 }
 
 UnitManager::UnitManager(Map *map):
@@ -619,8 +620,8 @@ void UnitManager::setPlayer(unit *playerUnit)
 
 void UnitManager::createFromFile(std::string fileName)
 {
-	m_map = new Map();
-
+	//m_map = new Map();
+	float fileScaleFactor = 1;
 	std::string line;
 	std::ifstream fileRead(fileName);
 	if (fileRead.is_open()) {
@@ -651,10 +652,47 @@ void UnitManager::createFromFile(std::string fileName)
 				continue;
 			}
 
+
+			if (tokens[0] == "spawnPoint") {
+				constexpr unsigned int displacementScale = 1;
+				
+				unsigned int enemies = std::atoi(tokens[1].c_str());
+				std::vector<std::string> enemyFileName;
+				for (size_t i = 4; i < tokens.size(); i++)
+				{
+					enemyFileName.push_back(tokens[i]);
+				}
+
+				for (size_t i = 0; i < enemies; i++)
+				{
+					size_t lastEnemyUnits = m_AIs.size();
+					createFromFile(enemyFileName[rand() % enemyFileName.size()]);
+					for (size_t o = lastEnemyUnits; o < m_AIs.size(); o++)
+					{
+						//((rand() % (displacementScale * 10)) / displacementScale) * ((rand() % 2) ? -1 : 1)
+						const float microDisplacementX = (rand()%enemies);
+						const float microDisplacementY = (rand() % enemies);
+						m_AIs[o]->getUnit()->move(sf::Vector2f(std::atof(tokens[2].c_str())+microDisplacementX,std::atof(tokens[3].c_str())+ microDisplacementY));
+						for (size_t p = 0; p < m_AIs.size(); p++) {
+							m_AIs[o]->getUnit()->collideOne(m_AIs[p]->getUnit());
+						}
+						
+					}
+				}
+				while (false) {
+					std::cout << m_AIs.size() << std::endl;
+				}
+				
+			}
+
+			if (tokens[0] == "scaleFactor") {
+				fileScaleFactor = std::atof(tokens[1].c_str());
+			}
+
 			if (tokens[0] == "wall") {
 				//std::cout << tokens.size() << std::endl;
 				//system("pause");
-				m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())), (sf::Vector2f(std::atof(tokens[3].c_str()), std::atof(tokens[4].c_str()))));
+				m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()) * fileScaleFactor, std::atof(tokens[2].c_str()) * fileScaleFactor) , (sf::Vector2f(std::atof(tokens[3].c_str())*fileScaleFactor, std::atof(tokens[4].c_str())*fileScaleFactor)));
 			}else
 			if (tokens[0] == "unit") {
 				EnemyAI *tempAI = new EnemyAI();
@@ -703,6 +741,15 @@ void UnitManager::createFromFile(std::string fileName)
 
 					m_player->setAnimatorSprite(tempASprtie);
 				}
+				m_player->back_left_idle.textureID = Animator::getInstance().getTextureID("player_back_left_idle.png");
+				m_player->back_left_idle.drawLayer = 2;
+				m_player->back_right_idle.textureID = Animator::getInstance().getTextureID("player_back_right_idle.png");
+				m_player->back_right_idle.drawLayer = 2;
+				m_player->front_left_idle.textureID = Animator::getInstance().getTextureID("player_front_left_idle.png");
+				m_player->front_left_idle.drawLayer = 2;
+				m_player->front_right_idle.textureID = Animator::getInstance().getTextureID("player_front_right_idle.png");
+				m_player->front_right_idle.drawLayer = 2;
+				m_player->usingCompositeTextures = true;
 
 			}else
 			if (tokens[0] == "bulletTexture") {
@@ -962,7 +1009,7 @@ void UnitManager::createFromFile(std::string fileName)
 
 				tempSprite.setPosition(sf::Vector2f(std::atof(tokens[3].c_str()), std::atof(tokens[4].c_str())));
 				tempSprite.setRotation(std::atof(tokens[5].c_str()));
-				tempSprite.scale(std::atof(tokens[6].c_str()), std::atof(tokens[6].c_str()));
+				tempSprite.scale(std::atof(tokens[6].c_str())*fileScaleFactor, std::atof(tokens[6].c_str())*fileScaleFactor);
 				m_worldTextures.push_back(tempSprite);
 			}
 			else if (tokens[0] == "animatorTexture") {
@@ -980,6 +1027,7 @@ void UnitManager::createFromFile(std::string fileName)
 
 UnitManager::~UnitManager()
 {
+	delete m_map;
 	for (size_t i = 0; i < m_AIs.size(); i++)
 	{
 		delete m_AIs[i];

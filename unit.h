@@ -45,12 +45,22 @@ private:
 
 	AnimatorSprite *animationConroller = nullptr;
 
+	
+	void m_collide(std::vector<unit*>);
 
 
 public:
 	static int ownedByIDTracker;
 
 	unsigned int walkingAnimation;
+
+	bool usingCompositeTextures = false;
+
+	//idle textures
+	AnimatorSprite back_left_idle;
+	AnimatorSprite back_right_idle;
+	AnimatorSprite front_left_idle;
+	AnimatorSprite front_right_idle;
 
     sf::Vector2f lastPos;
     sf::Vector2f lastLastPos;
@@ -102,6 +112,8 @@ public:
 	float getVelocityMag()const;
 
 	sf::Vector2f getUnitVecTo(sf::Vector2f);
+
+	void collideOne(unit*);
 
 	//updates the position in accordance to the surroundings
 	void update(float, std::vector<unit*> colliders = std::vector<unit*>());

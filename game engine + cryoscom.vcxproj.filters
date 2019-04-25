@@ -143,6 +143,9 @@
     <ClInclude Include="Animator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cryoscom_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="bullet.png">
@@ -173,6 +176,21 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="tooltip.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Cryo_area_2_WIP.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="player_back_left_idle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="player_back_right_idle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="player_front_left_idle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="player_front_right_idle.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -221,6 +239,12 @@
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="progression.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="enemy_test.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="oldMap2.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

@@ -412,8 +412,9 @@ void GameMain::gameLoop()
 		//tempSprite.rotation = 60;
 
 		//Animator::getInstance().addOneFrameSprite(tempSprite);
-
+		Animator::getInstance().update(currentTime.asSeconds());
 		Animator::getInstance().draw();
+
 
 		//m_gameMenus["HUD"]->draw(m_viewDisplacement);
 
