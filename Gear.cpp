@@ -24,10 +24,13 @@ void Gear::saveGearToFile(std::string fileName)
 	std::map<std::string, GearPiece>::iterator it;
 	for (it = m_gearItems.begin(); it != m_gearItems.end(); it++)
 	{
+
 		editFile << "gearPiece" << ";" << 0 << ";" << 0 << ";"
 			<< it->first << ";"
 			<< it->second.dModule.hitPoinCap << ";"
 			<< it->second.dModule.moveSpeed << ";"
+			<< it->second.dModule.manaCap << ";"
+			<< it->second.dModule.weight << ";"
 			<< it->second.aModule.bulletDuration << ";"
 			<< it->second.aModule.bulletSpeed << ";"
 			<< it->second.aModule.fireRate << ";"
@@ -147,10 +150,13 @@ void Gear::assignGear(unit *aunit, bool heal)
 		Dmodule->damageTakenPerSecond += it->second.dModule.damageTakenPerSecond;
 		Dmodule->hitPoinCap += it->second.dModule.hitPoinCap;
 		Dmodule->moveSpeed += it->second.dModule.moveSpeed;
+		Dmodule->manaCap += it->second.dModule.manaCap;
+		Dmodule->weight += it->second.dModule.weight;
 	}
 	if (heal) {
 		Dmodule->hitPoints = Dmodule->hitPoinCap;
 		Dmodule->damageTakenPerSecond = 0;
+		Dmodule->mana = Dmodule->manaCap;
 	}
 
 	if (aunit->Amodule != nullptr) {
@@ -185,33 +191,37 @@ GearPiece GearPiece::makeGearPiece(std::vector<std::string> tokens)
 	Dmodule.hitPoinCap = std::atof(tokens[4].c_str());
 	Dmodule.hitPoints = 0;
 	Dmodule.moveSpeed = std::atof(tokens[5].c_str());
-	Amodule.bulletDuration = std::atof(tokens[6].c_str());
-	Amodule.bulletSpeed = std::atof(tokens[7].c_str());
-	Amodule.fireRate = std::atof(tokens[8].c_str());
-	Amodule.inaccuracy = std::atof(tokens[9].c_str());
-	Amodule.pushBackStrength = std::atof(tokens[10].c_str());
-	Amodule.bulletSize =std::atof(tokens[11].c_str());
-	Amodule.magSize = std::atof(tokens[12].c_str());
-	Amodule.reloadTime = std::atof(tokens[13].c_str());
+	Dmodule.manaCap = std::atof(tokens[6].c_str());
+	Dmodule.mana = 0;
+	Dmodule.weight = std::atof(tokens[7].c_str());
+	Amodule.bulletDuration = std::atof(tokens[8].c_str());
+	Amodule.bulletSpeed = std::atof(tokens[9].c_str());
+	Amodule.fireRate = std::atof(tokens[10].c_str());
+	Amodule.inaccuracy = std::atof(tokens[11].c_str());
+	Amodule.pushBackStrength = std::atof(tokens[12].c_str());
+	Amodule.bulletSize =std::atof(tokens[13].c_str());
+	Amodule.magSize = std::atof(tokens[14].c_str());
+	Amodule.reloadTime = std::atof(tokens[15].c_str());
 
-	Amodule.igniteDamage = std::atof(tokens[14].c_str());
-	Amodule.frozenAttackCardsIntroduced = std::atoi(tokens[15].c_str());
-	Amodule.moveSpeedReduction = std::atof(tokens[16].c_str());
+	Amodule.igniteDamage = std::atof(tokens[16].c_str());
+	Amodule.frozenAttackCardsIntroduced = std::atoi(tokens[17].c_str());
+	Amodule.moveSpeedReduction = std::atof(tokens[18].c_str());
+
 
 	GearPiece tempGearPiece;
 	tempGearPiece.aModule = Amodule;
 	tempGearPiece.dModule = Dmodule;
 	tempGearPiece.type = tokens[3];
-	tempGearPiece.goldValue = std::atoi(tokens[17].c_str());
+	tempGearPiece.goldValue = std::atoi(tokens[19].c_str());
 
-	if (tokens.size() > 18) {
-		tempGearPiece.name = tokens[18];
-	}
-	if (tokens.size() > 19) {
-		tempGearPiece.tex.textureID = Animator::getInstance().getTextureID(tokens[19]);
-	}
 	if (tokens.size() > 20) {
-		tempGearPiece.tex.scale = std::atof(tokens[20].c_str());
+		tempGearPiece.name = tokens[20];
+	}
+	if (tokens.size() > 21) {
+		tempGearPiece.tex.textureID = Animator::getInstance().getTextureID(tokens[21]);
+	}
+	if (tokens.size() > 22) {
+		tempGearPiece.tex.scale = std::atof(tokens[22].c_str());
 	}
 	return tempGearPiece;
 }

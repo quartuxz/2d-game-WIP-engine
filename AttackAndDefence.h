@@ -6,6 +6,20 @@ class DefenceModule;
 
 class DefenceCard;
 
+class AttackModule;
+
+enum effectTypes {
+	staminaRegenEffect, damageOverTimeEffect, rootEffect
+};
+
+struct effect {
+	effectTypes eType;
+	float duration = 0;
+	float amount = 0;
+	float originalAmount = 0;
+	bool active = false;
+};
+
 class DefenceCard {
 protected:
 
@@ -38,8 +52,18 @@ public:
 	float hitPoints = hitPoinCap;
 	float moveSpeed;
 	float damageTakenPerSecond;
+	float weight = 0;
+	float manaCap = 0;
+	float mana = manaCap;
+	float manaRegen = 0;
+	float stamina = 100;
+	float staminaRegen = 5;
+	float effectMultiplier = 1;
 
-	std::pair<sf::Vector2f, float> push;
+	void processEffects(float, AttackModule*);
+
+	std::vector<effect> effects;
+	std::vector<std::pair<sf::Vector2f, float>> pushes;
 
 	std::vector<DefenceCard> defenceCards;
 

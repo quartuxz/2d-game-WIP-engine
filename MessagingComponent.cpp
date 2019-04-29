@@ -1,5 +1,5 @@
 #include "MessagingComponent.h"
-
+#include "cryoscom_defsAndUtils.h"
 
 MessageData::MessageData(){
 
@@ -19,7 +19,37 @@ MessageData::MessageData(std::string mProps, std::string mData){
     messageType = stringToMessageType(props[0]);
 }
 
-MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t selfID, const std::map<std::string, size_t> &nameIDMap)const{
+decomposedData MessageData::serialize() {
+	decomposedData tempDData;
+	tempDData.type = "MessageData";
+	tempDData.name = "";
+	tempDData.addData(messageType);
+	tempDData.addData(ma_serialize(senderID));
+	tempDData.addData(ma_serialize(intendedReceiverID));
+	for (size_t i = 0; i < messageContents.size(); i++)
+	{
+		tempDData.addChildrenObject(messageContents[i]);
+	}
+	return tempDData;
+}
+void MessageData::createFrom(const decomposedData& DData) {
+	messageType = DData.data[0];
+#if CRYOSCOM_DEBUG
+	senderID = fast_atou(DData.data[1].c_str());
+	intendedReceiverID = fast_atou(DData.data[2].c_str());
+#else
+	senderID = atoi(DData.data[1].c_str());
+	intendedReceiverID = atoi(DData.data[2].c_str());
+#endif
+	for (size_t i = 0; i < DData.childrenObjects.size(); i++)
+	{
+		messageContents.push_back(DData.childrenObjects[i]);
+	}
+
+}
+
+MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t selfID, const std::map<std::string, size_t> &nameIDMap, std::string gameData)const{
+	//return MessageData();
     boost::python::list paramList;
     boost::python::dict IDDictionary;
 
@@ -32,10 +62,10 @@ MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t
         IDDictionary[it.first] = it.second;
     }
 
-    boost::python::object pyFuncRetVal = pyFunc(false, messageType, senderID, intendedReceiverID, paramList, IDDictionary);
+    boost::python::object pyFuncRetVal = pyFunc(false, boost::python::str(messageType), senderID, intendedReceiverID, paramList, IDDictionary, selfID, boost::python::str(gameData));
     MessageData retVal;
-    int tempMessageType = boost::python::extract<int>(pyFuncRetVal[0]);
-    retVal.messageType = static_cast<MessageTypes>(tempMessageType);
+    std::string tempMessageType = boost::python::extract<std::string>(pyFuncRetVal[0]);
+    retVal.messageType = tempMessageType;
     retVal.senderID = selfID;
     retVal.intendedReceiverID = boost::python::extract<int>(pyFuncRetVal[1]);
     retVal.messageContents = decomposeString(boost::python::extract<std::string>(pyFuncRetVal[2]));

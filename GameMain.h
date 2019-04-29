@@ -7,7 +7,22 @@
 #include <stack>
 #include "Menu.h"
 #include "unitManager.h"
+#include "MessageBus.h"
+#include "Logger.h"
 
+
+class GameScript : public MessagingComponent {
+private:
+	boost::python::object m_pythonFunc;
+	decomposedData m_gameData;
+	std::string m_cachedSerializedGameData;
+protected:
+	void pv_processMessage(const MessageData&, MessageBus*)override;
+public:
+	void createFromFile(std::string);
+	decomposedData getGameData()const;
+	void setGameData(decomposedData);
+};
 
 class HUDMenu : public Menu {
 private:
@@ -24,7 +39,7 @@ public:
 	void update(updateEvent)override;
 };
 
-class GameMain
+class GameMain : public MessagingComponent
 {
 private:
 	std::vector<std::string> m_gameLevels;
@@ -34,6 +49,10 @@ private:
 	std::map<std::string ,Menu*> m_gameMenus;
 	std::string m_activeMenu = "mainMenu";
 	UnitManager *m_currentLevel = new UnitManager();
+	
+	Logger m_gameLogger;
+	MessageBus m_gameBus;
+	void pv_processMessage(const MessageData&, MessageBus*)override;
 
 	std::stack<updateEvent> m_updateEvents;
 
@@ -50,6 +69,7 @@ private:
 	void m_create(std::vector<std::string>);
 
 	void m_setActiveLevel();
+	void m_loadLevelGameMainBits(std::string);
 
 	bool m_HUDActive = true;
 
@@ -72,6 +92,7 @@ public:
 
 	void setProgressionFile(std::string);
 
+	void onProgramStart();
 	void spawnWindow(std::string fontFile = "good times rg.ttf");
 	void startLevel(unsigned int activeLevel = 0);
 

@@ -8,7 +8,7 @@
 struct GearPiece {
 	size_t ID = reinterpret_cast<size_t>(this);
 
-	static constexpr unsigned int maxFields = 21;//plus 3 from aModule
+	static constexpr unsigned int maxFields = 22;//plus 3 from aModule
 
 	unsigned int goldValue = 10;
 	std::string type;

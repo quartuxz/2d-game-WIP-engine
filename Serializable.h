@@ -39,11 +39,13 @@ struct decomposedData{
         std::string serialize(unsigned int indentation = 0)const;
         std::string getMushedData()const;
 
+		//returns null if not found
+		decomposedData *getChildByName(std::string);
         //for constructing a decomposedData object inline
-        decomposedData setType(std::string);
-        decomposedData setName(std::string);
-        decomposedData addData(std::string);
-        decomposedData addChildrenObject(decomposedData);
+        decomposedData &setType(std::string);
+        decomposedData &setName(std::string);
+        decomposedData &addData(std::string);
+        decomposedData &addChildrenObject(decomposedData);
 };
 
 
@@ -51,7 +53,7 @@ class Serializable
 {
     public:
         Serializable();
-        virtual std::string getTypeName() = 0;
+        //virtual std::string getTypeName() = 0;
         virtual void createFrom(const decomposedData&) = 0;
         virtual decomposedData serialize() = 0;
         virtual ~Serializable();
@@ -68,28 +70,25 @@ std::string composeString(std::vector<decomposedData>);
 
 
 template<class T>
-std::string serialize(T);
+std::string ma_serialize(T);
 
 template<class T>
-T deserialize(std::string);
+T ma_deserialize(std::string);
 
 template<>
-std::string serialize<float>(float);
+std::string ma_serialize<float>(float);
+
+float ma_deserialize_float(std::string);
 
 template<>
-float deserialize(std::string);
+std::string ma_serialize<int>(int);
+
+int ma_deserialize_string(std::string);
 
 template<>
-std::string serialize<int>(int);
+std::string ma_serialize<unsigned int>(unsigned int);
 
-template<>
-int deserialize(std::string);
-
-template<>
-std::string serialize<unsigned int>(unsigned int);
-
-template<>
-unsigned int deserialize(std::string);
+unsigned int ma_deserialize_uint(std::string);
 
 
 

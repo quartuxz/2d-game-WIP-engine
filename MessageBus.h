@@ -15,7 +15,15 @@ class MessageBus
         const std::map<std::string, size_t> &getEntryIDs()const;
         //
 
-        size_t addMessagingComponent(MessagingComponent*);
+		void setUpdateInterval(float);
+
+		void startFrame(float);
+		bool canMessage();
+		void endFrame();
+		//bool autoCapFunction = false;
+
+		MessagingComponent *getMessagingComponent(size_t);
+        size_t addMessagingComponent(MessagingComponent*, bool dynamicObj = false);
         void addMessage(MessageData*);
         void notify();
 
@@ -28,10 +36,20 @@ class MessageBus
         MessageData m_lastMessage;
         //~
 
+		//capping messaging per second
+		float m_addedTime = 0;
+		float m_updateInterval = 0.5;
+
+		//
+
         //entry handling(named MessagingComponents)
         std::map<std::string, size_t> m_entryIDs;
         std::map<size_t, std::string> m_entryNames;
         //
+
+		//memory management
+		std::vector<MessagingComponent*> m_dynamicMessagingComponents;
+		//
 
         //core messaging
         std::queue<MessageData*> m_messageQueue;

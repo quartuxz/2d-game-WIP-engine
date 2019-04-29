@@ -25,6 +25,8 @@ private:
 
 	sf::RenderWindow *m_window;
 
+	std::map<std::string, AnimatorSprite> m_uniqueAnimatorSprites;
+
 	std::vector<std::stack<sf::Sprite>> m_spritesToDraw;
 	std::vector<ToolTip*> m_toolTipsToDraw;
 
@@ -75,14 +77,16 @@ public:
 	//pass the name of the texture file, returns the unique ID of the texture
 	unsigned int addTexture(std::string);
 	//pass the ID of the texture you wish to instanciate, together with the position you want to draw it on, its draw layer and its scale
-	void addOneFrameSprite(AnimatorSprite);
+	void addOneFrameSprite(const AnimatorSprite &);
+
+	std::map<std::string, AnimatorSprite> *getUnqiueAnimatorSprites();
 
 	void addOneFrameSprite(ToolTip*);
 
 	//takes float(time) as an argument, updates the animation state
 	void update(float);
 
-	void addDecal(AnimatorSprite);
+	void addDecal(const AnimatorSprite &);
 
 	std::string getTextureFileName(unsigned int);
 	unsigned int getTextureID(std::string);

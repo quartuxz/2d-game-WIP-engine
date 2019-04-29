@@ -19,36 +19,6 @@
 #include "MessageBus.h"
 #include "MessagingComponent.h"
 
-class Interactable : public MessagingComponent{
-private:
-    boost::python::object m_pythonFunc;
-public:
-    void pv_processMessage(const MessageData& tempMessage, MessageBus* bus)override{
-
-        std::cout << "\033[2J\033[1;1H";
-        bus->addMessage(new MessageData(tempMessage.processPythonFunc(m_pythonFunc, p_uniqueID, bus->getEntryIDs())));
-    }
-
-    void createFromFile(std::string scriptName)
-    {
-        try
-        {
-            boost::python::str tempStr(scriptName);
-            m_pythonFunc = boost::python::import(tempStr).attr("gameScript");
-        }
-        catch (const boost::python::error_already_set&)
-        {
-            PyErr_Print();
-            while(true){
-                PyErr_Print();
-            }
-            m_pythonFunc = boost::python::api::object();
-            return;
-        }
-    }
-
-};
-
 int factorial(int n)
 {
     if(n > 1)
@@ -106,7 +76,7 @@ int main()
 //    sDataChildObject.type = "asdType";
 //    sDataChildObject.name = "asd";
 //    sData.childrenObjects.push_back(sDataChildObject);
-//    std::cout << sData.serialize() << std::endl;
+//    //std::cout << sData.serialize() << std::endl;
 //    message.push_back(sData);
 //
 //
@@ -115,45 +85,45 @@ int main()
 //    std::string data = "{r{ asdasd,.,.,**+++$%{}{{}{{}{{}{}}}}}{hello=/%&${{}{{}}}**+ }{}}";
 //    data = "{rocket,main rocket,{cone,topCone,asd,{tip,coneTip,}{ring,cone ring,}}{fuselage,mainFuse,}}";
 //    //data = sData.serialize();
-//    std::cout << data << std::endl;
+//    //std::cout << data << std::endl;
 //    decomposedData tempDData;
 //    tempDData.createFrom(data);
 //    message.push_back(tempDData);
 //    std::string tempComposedString = composeString(message);
-//    std::cout << tempComposedString << std::endl;
-//    std::cout << decomposeString(tempComposedString)[1].type << std::endl;
+//    //std::cout << tempComposedString << std::endl;
+//    //std::cout << decomposeString(tempComposedString)[1].type << std::endl;
 //
 //    while(true){
 //
 //    }
 //
-//    std::cout << tempDData.serialize() << std::endl;
+//    //std::cout << tempDData.serialize() << std::endl;
 //    tempDData.createFrom(tempDData.serialize());
-//    std::cout << tempDData.serialize() << std::endl;
-//    std::cout << std::endl << "print: " << std::endl;
-//    std::cout << tempDData.type << std::endl;
-//    std::cout << tempDData.name << std::endl;
-//    std::cout << tempDData.childrenObjects[0].type << std::endl;
-//    std::cout << tempDData.childrenObjects[0].name << std::endl;
-//    std::cout << tempDData.childrenObjects[0].data[0] << std::endl;
-//    std::cout << std::endl << "rocket childrenObject, cone childrenObject, tip object: " << std::endl;
-//    std::cout << tempDData.childrenObjects[0].childrenObjects[0].type << std::endl;
-//    std::cout << tempDData.childrenObjects[0].childrenObjects[0].name << std::endl;
+//    //std::cout << tempDData.serialize() << std::endl;
+//    //std::cout << std::endl << "print: " << std::endl;
+//    //std::cout << tempDData.type << std::endl;
+//    //std::cout << tempDData.name << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].type << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].name << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].data[0] << std::endl;
+//    //std::cout << std::endl << "rocket childrenObject, cone childrenObject, tip object: " << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].childrenObjects[0].type << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].childrenObjects[0].name << std::endl;
 //
-//    std::cout << tempDData.childrenObjects[0].childrenObjects[1].type << std::endl;
-//    std::cout << tempDData.childrenObjects[0].childrenObjects[1].name << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].childrenObjects[1].type << std::endl;
+//    //std::cout << tempDData.childrenObjects[0].childrenObjects[1].name << std::endl;
 //
-//    std::cout << std::endl;
-//    std::cout << tempDData.childrenObjects[1].type << std::endl;
-//    std::cout << tempDData.childrenObjects[1].name << std::endl;
+//    //std::cout << std::endl;
+//    //std::cout << tempDData.childrenObjects[1].type << std::endl;
+//    //std::cout << tempDData.childrenObjects[1].name << std::endl;
 ////    std::vector<std::string> result = processBlock(data);
-////    std::cout << data << std::endl;
+////    //std::cout << data << std::endl;
 ////    size_t blocks = 0;
 ////    for(size_t i = 0; i < result.size(); i++){
 ////        blocks++;
-////        std::cout << result[i] << std::endl;
+////        //std::cout << result[i] << std::endl;
 ////    }
-////    std::cout << blocks << std::endl;
+////    //std::cout << blocks << std::endl;
 //
 //
 //
@@ -198,7 +168,7 @@ int main()
 //    tempList.append("roflcopter");
 //
 //    python::object retVal = func(tempList);
-//    std::cout << boost::python::len(retVal[2]) << std::endl;
+//    //std::cout << boost::python::len(retVal[2]) << std::endl;
 //
 //    tempList = python::extract<boost::python::list>(retVal[2]);
 //
@@ -209,8 +179,8 @@ int main()
 //
 //
 //
-//    std::cout << realRetVal << std::endl;
-//    std::cout << python::extract<int>(nestedList[0]) << std::endl;
+//    //std::cout << realRetVal << std::endl;
+//    //std::cout << python::extract<int>(nestedList[0]) << std::endl;
 //    //std::cout << python::extract<int>(tempList.pop(0) << std::endl;
 //    }
 //    catch (const python::error_already_set&)
@@ -231,6 +201,7 @@ int main()
 	gameMain.createUIFromFile("mainUI.txt");
 	gameMain.setProgressionFile("progression.txt");
 	gameMain.startLevel();
+	gameMain.onProgramStart();
 	gameMain.gameLoop();
 	gameMain.onProgramEnd();
 	//_CrtDumpMemoryLeaks();

@@ -22,9 +22,38 @@ m_wieldingUnit(wieldingUnit)
 {
 }
 
+failCastTypes Weapon::useSkill(skillParam sParam) {
+	if (m_wieldingUnit->Dmodule->mana >= sParam.manaCost) {
+		if (m_wieldingUnit->Dmodule->stamina >= sParam.staminaCost) {
+			switch (sParam.sType)
+			{
+			case dash:
+					m_wieldingUnit->Dmodule->stamina -= sParam.staminaCost;
+					m_wieldingUnit->Dmodule->pushes.push_back(std::pair<sf::Vector2f, float>());
+					m_wieldingUnit->Dmodule->pushes.back().first = sf::Vector2f(sParam.dirUnitVec.x * m_wieldingUnit->Dmodule->moveSpeed * (100 / (m_wieldingUnit->Dmodule->weight + 20)), sParam.dirUnitVec.y * m_wieldingUnit->Dmodule->moveSpeed * (100 / (m_wieldingUnit->Dmodule->weight + 20)));
+					m_wieldingUnit->Dmodule->pushes.back().second = 0.25;
+				
+		
+				break;
+			default:
+				break;
+			}
+			return notFail;
+		}
+		else {
+			return outOfStamina;
+		}
+	}
+	else {
+		return outOfMana;
+	}
+	//std::cout << "dash" << std::endl;
+	
+}
+
 void Weapon::m_fire(sf::Vector2f unitVec)
 {
-	std::cout << m_wieldingUnit->Amodule->bulletSpeed << std::endl;
+	//std::cout << m_wieldingUnit->Amodule->bulletSpeed << std::endl;
 	//system("pause");
 	float r3 = -(m_wieldingUnit->Amodule->inaccuracy / 2) + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / ((m_wieldingUnit->Amodule->inaccuracy / 2) - -(m_wieldingUnit->Amodule->inaccuracy / 2))));
 	//float r3 = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / Amodule->inaccuracy));
@@ -46,7 +75,7 @@ void Weapon::m_fire(sf::Vector2f unitVec)
 void Weapon::fire(sf::Vector2f unitVec)
 {
     if(m_magBulletsUsed >= m_wieldingUnit->Amodule->magSize){
-        std::cout << m_wieldingUnit->Amodule->reloadTime << std::endl;
+        //std::cout << m_wieldingUnit->Amodule->reloadTime << std::endl;
         if(m_accumulatedFireTime >= m_wieldingUnit->Amodule->reloadTime){
             m_magBulletsUsed = 0;
         }

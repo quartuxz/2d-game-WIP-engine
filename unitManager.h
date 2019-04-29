@@ -14,6 +14,8 @@
 
 
 
+
+
 enum endLevelTypes {
 	levelActive, playerDied, goalReached
 };
@@ -44,8 +46,8 @@ class UnitManager
 {
 private:
 	Map *m_map;
-	Weapon* m_playerWeapon;
-	unit *m_player;
+	Weapon* m_playerWeapon = nullptr;
+	unit *m_player = nullptr;
 	std::vector<EnemyAI*> m_AIs;
 
 	Gear m_gear;
@@ -56,7 +58,7 @@ private:
 	std::vector<std::pair<GearPiece, unsigned int>> m_lootTable;
 
 	std::vector<sf::Sprite> m_worldTextures;
-
+	
 	std::vector<AttackCard*> m_toDeleteACards;
 	std::vector<DefenceCard*> m_toDeleteDCards;
 	std::vector<sf::Texture*> m_toDeleteTextures;
@@ -83,6 +85,7 @@ private:
 	unsigned int m_healthPotions = 10;
 	unsigned int m_gold = 0;
 
+	float m_levelScale = 1;
 
 	void m_updateAIWeapons(std::vector<Weapon*>);
 	void m_updateAI(float ,std::vector<unit*>, std::vector<unit*>);
@@ -154,8 +157,13 @@ public:
 	void addAI(EnemyAI*);
 	void setPlayer(unit*);
 
+	float getLevelScale() const;
+
+	void setLevelScale(float);
+
 	void createFromFile(std::string);
 
 	~UnitManager();
 };
+
 

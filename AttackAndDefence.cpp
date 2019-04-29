@@ -37,8 +37,51 @@ DefenceModule::DefenceModule(bool)
 {
 	hitPoinCap = 0;
 	hitPoints = 0;
+	manaCap = 0;
+	mana = 0;
 	moveSpeed = 0;
 	damageTakenPerSecond = 0;
+}
+
+void DefenceModule::processEffects(float timeDelta, AttackModule *aModule) {
+	for (size_t i = 0; i < effects.size(); i++)
+	{
+		float minDuration = std::min(timeDelta, effects[i].duration);
+		switch (effects[i].eType)
+		{
+		case staminaRegenEffect:
+			stamina += effects[i].amount * minDuration;
+			if (stamina > 100) {
+				stamina = 100;
+			}
+			break;
+		case damageOverTimeEffect:
+			hitPoints -= effects[i].amount * minDuration;
+			break;
+		case rootEffect:
+			if (!effects[i].active) {
+				effects[i].originalAmount = moveSpeed;
+				moveSpeed -= effects[i].amount;
+				effects[i].active = true;
+			}
+			
+			
+			break;
+		default:
+			break;
+		}
+		if (aModule != nullptr) {
+
+		}
+		effects[i].duration -= timeDelta;
+		if (effects[i].duration <= 0) {
+			if (effects[i].eType == rootEffect) {
+				moveSpeed = effects[i].originalAmount;
+			}
+			effects.erase(effects.begin() + i);
+		}
+	}
+	
 }
 
 DefenceModule::~DefenceModule()
@@ -179,11 +222,14 @@ AttackCard AttackCard::makeAttackCard(std::vector<std::string> tokens)
 
 void AttackModule::attack(DefenceModule *module, AttackModule *amodule, DefenceModule *ownModule, attackParameters aParams)
 {
-	module->push = std::pair<sf::Vector2f, float>(aParams.bulletDir, pushBackStrength);
+	module->pushes.push_back(std::pair<sf::Vector2f, float>(aParams.bulletDir, pushBackStrength));
 	int index = rand() % attackCards.size();
 	AttackCard temp = attackCards[index];
 	if(temp.ignites){
-        module->damageTakenPerSecond += igniteDamage;
+		effect tempEffect;
+		tempEffect.amount = igniteDamage;
+		tempEffect.duration = 5;
+        module->effects.push_back(tempEffect);
 	}
 	if(temp.freezes){
         AttackCard frozenAttackCard;
@@ -194,10 +240,12 @@ void AttackModule::attack(DefenceModule *module, AttackModule *amodule, DefenceM
         }
 	}
 	if(temp.roots){
-        module->moveSpeed -= moveSpeedReduction;
-        if(module->moveSpeed < 0){
-            module->moveSpeed = 0;
-	    }
+		effect tempEffect;
+		tempEffect.eType = rootEffect;
+		tempEffect.amount = moveSpeedReduction;
+		tempEffect.duration = 3;
+        module->effects.push_back(tempEffect);
+        
 	}
 	temp.attack(module, amodule);
 	ownModule->hitPoints -= temp.damageDoneToSelf;

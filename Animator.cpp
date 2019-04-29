@@ -119,7 +119,7 @@ unsigned int Animator::addTexture(std::string fileName)
 	return (m_TextureIDCounter-1);
 }
 
-void Animator::addOneFrameSprite(AnimatorSprite aSprite)
+void Animator::addOneFrameSprite(const AnimatorSprite &aSprite)
 {
     if (m_spritesToDraw.size() < (aSprite.drawLayer + 1)) {
 		m_spritesToDraw.resize(aSprite.drawLayer + 1);
@@ -128,6 +128,11 @@ void Animator::addOneFrameSprite(AnimatorSprite aSprite)
 		m_spritesToDraw[aSprite.drawLayer].push(m_getSprite(aSprite));
 	}
 
+}
+
+std::map<std::string, AnimatorSprite>* Animator::getUnqiueAnimatorSprites()
+{
+	return &m_uniqueAnimatorSprites;
 }
 
 void Animator::addOneFrameSprite(ToolTip *toolTip)
@@ -142,7 +147,7 @@ void Animator::update(float timeDelta)
 	std::list<AnimatorSprite>::iterator it2;
 	for (it2 = m_decals.begin(); it2 != m_decals.end(); ++it2)
 	{
-		if (it2->timeDisplayed == 0 || it2->timeElapsed < it2->timeDisplayed) {
+		if (it2->timeDisplayed != 0 && it2->timeElapsed < it2->timeDisplayed) {
 			it2->timeElapsed += timeDelta;
 		}
 	}
@@ -161,7 +166,7 @@ void Animator::update(float timeDelta)
 	}
 }
 
-void Animator::addDecal(AnimatorSprite decal)
+void Animator::addDecal(const AnimatorSprite &decal)
 {
 	m_decals.push_back(decal);
 }
@@ -204,11 +209,15 @@ unsigned int Animator::addAnimationPreset(std::queue<AnimatorSprite> animationPr
 
 void Animator::draw()
 {
+	for (auto const& x : m_uniqueAnimatorSprites)
+	{
+		addOneFrameSprite(x.second);
+	}
 	std::list<AnimatorSprite>::iterator it;
 	for (it = m_decals.begin(); it != m_decals.end(); ++it)
 	{
 		addOneFrameSprite(*it);
-		if (it->timeDisplayed != 0 || it->timeElapsed > it->timeDisplayed) {
+		if (it->timeDisplayed == 0 || it->timeElapsed >= it->timeDisplayed) {
 			m_decals.erase(it);
 		}
 	}

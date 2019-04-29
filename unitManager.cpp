@@ -7,6 +7,8 @@
 const float UnitManager::m_itemPickupCooldown = 2;
 
 
+
+
 void MarketMenu::createStaticMenuLayout()
 {
 	//
@@ -329,6 +331,7 @@ Menu * UnitManager::interact()
 UnitManager::UnitManager()
 {
 	m_map = new Map();
+	
 }
 
 UnitManager::UnitManager(Map *map):
@@ -535,7 +538,7 @@ void UnitManager::loadLootTable(std::string fileName)
 			}
 			else
 			if (tokens[0] == "defenceCard") {
-				std::cout << tokens[11] << std::endl;
+				//std::cout << tokens[11] << std::endl;
 				//system("pause");
 				DefenceCard tempDCard = DefenceCard::makeDefenceCard(tokens);
 				m_lootTable[std::atoi(tokens[1].c_str())].first.dModule.defenceCards.push_back(tempDCard);
@@ -544,7 +547,7 @@ void UnitManager::loadLootTable(std::string fileName)
 			else if (tokens[0] == "gearPiece") {
 
 				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				m_lootTable.push_back(std::pair<GearPiece, unsigned int>(tempGearPiece, std::atoi(tokens[GearPiece::maxFields].c_str())));
+				m_lootTable.push_back(std::pair<GearPiece, unsigned int>(tempGearPiece, std::atoi(tokens.back().c_str())));
 			}
 		}
 		fileRead.close();
@@ -583,7 +586,7 @@ void UnitManager::pickUpGear()
 	if (m_itemPickupClock.getElapsedTime().asSeconds() > m_itemPickupCooldown) {
 		for (size_t i = 0; i < m_mapGearPieces.size(); i++)
 		{
-			std::cout << "size of gear: " << m_mapGearPieces.size() << std::endl;
+			//std::cout << "size of gear: " << m_mapGearPieces.size() << std::endl;
 			if (distance(m_mapGearPieces[i].first, m_player->getBody()[0].first) < m_pickUpDistance) {
 				m_mapGearPieces[i].second.tex.rotation = 0;
 				addPlayerGear(m_mapGearPieces[i].second);
@@ -599,7 +602,7 @@ void UnitManager::pickUpGear()
 void UnitManager::assignPlayerGear(bool heal)
 {
 	m_gear.assignGear(m_player, heal);
-	std::cout << "bullet speed: " << m_player->Amodule->bulletSpeed << ", bullet duration: " << m_player->Amodule->bulletDuration << ", fire rate: " << m_player->Amodule->fireRate << std::endl;
+	//std::cout << "bullet speed: " << m_player->Amodule->bulletSpeed << ", bullet duration: " << m_player->Amodule->bulletDuration << ", fire rate: " << m_player->Amodule->fireRate << std::endl;
 }
 
 void UnitManager::addPlayerGear(GearPiece gearPiece)
@@ -618,10 +621,17 @@ void UnitManager::setPlayer(unit *playerUnit)
 	m_player = playerUnit;
 }
 
+float UnitManager::getLevelScale()const {
+	return m_levelScale;
+}
+
+void UnitManager::setLevelScale(float val) {
+	m_levelScale = val;
+}
+
 void UnitManager::createFromFile(std::string fileName)
 {
 	//m_map = new Map();
-	float fileScaleFactor = 1;
 	std::string line;
 	std::ifstream fileRead(fileName);
 	if (fileRead.is_open()) {
@@ -680,19 +690,19 @@ void UnitManager::createFromFile(std::string fileName)
 					}
 				}
 				while (false) {
-					std::cout << m_AIs.size() << std::endl;
+					//std::cout << m_AIs.size() << std::endl;
 				}
 				
 			}
 
 			if (tokens[0] == "scaleFactor") {
-				fileScaleFactor = std::atof(tokens[1].c_str());
+				m_levelScale = std::atof(tokens[1].c_str());
 			}
 
 			if (tokens[0] == "wall") {
 				//std::cout << tokens.size() << std::endl;
 				//system("pause");
-				m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()) * fileScaleFactor, std::atof(tokens[2].c_str()) * fileScaleFactor) , (sf::Vector2f(std::atof(tokens[3].c_str())*fileScaleFactor, std::atof(tokens[4].c_str())*fileScaleFactor)));
+				m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale) , (sf::Vector2f(std::atof(tokens[3].c_str())*m_levelScale, std::atof(tokens[4].c_str())*m_levelScale)));
 			}else
 			if (tokens[0] == "unit") {
 				EnemyAI *tempAI = new EnemyAI();
@@ -879,7 +889,7 @@ void UnitManager::createFromFile(std::string fileName)
 
 			}else
 			if (tokens[0] == "defenceCard") {
-				std::cout << tokens[11] << std::endl;
+				//std::cout << tokens[11] << std::endl;
 				//system("pause");
 				DefenceCard tempDCard = DefenceCard::makeDefenceCard(tokens);
 				for (size_t i = DefenceCard::maxFields; i < tokens.size(); i++)
@@ -1009,7 +1019,7 @@ void UnitManager::createFromFile(std::string fileName)
 
 				tempSprite.setPosition(sf::Vector2f(std::atof(tokens[3].c_str()), std::atof(tokens[4].c_str())));
 				tempSprite.setRotation(std::atof(tokens[5].c_str()));
-				tempSprite.scale(std::atof(tokens[6].c_str())*fileScaleFactor, std::atof(tokens[6].c_str())*fileScaleFactor);
+				tempSprite.scale(std::atof(tokens[6].c_str())*m_levelScale, std::atof(tokens[6].c_str())*m_levelScale);
 				m_worldTextures.push_back(tempSprite);
 			}
 			else if (tokens[0] == "animatorTexture") {

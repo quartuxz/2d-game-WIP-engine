@@ -6,6 +6,25 @@
 #include "unit.h"
 #include "Bullet.h"
 
+enum failCastTypes {
+	outOfStamina, outOfMana, notFail
+};
+
+enum skillTypes {
+	dash
+};
+
+struct skillParam {
+	float castDelay = 0;
+	sf::Vector2f dirUnitVec;
+	skillTypes sType;
+	float strenght = 3;
+	float manaCost = 0;
+	float staminaCost = 0;
+};
+
+
+
 class Weapon
 {
 private:
@@ -37,6 +56,8 @@ public:
 	Weapon(unit*);
 
 	void fire(sf::Vector2f);
+
+	failCastTypes useSkill(skillParam);
 
 	std::vector<unsigned int> update(float, std::vector<unit*>);
 	std::vector<unsigned int> update(float, std::queue<unit*>);

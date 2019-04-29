@@ -8,7 +8,12 @@
 
 
 
-struct MessageData{
+
+enum messageReceivers {
+	justIntended, intendedAndMe, AllComponents
+};
+
+struct MessageData : public Serializable{
     enum MessageTypes{
     nullMessage,
     printToConsole
@@ -18,30 +23,36 @@ struct MessageData{
     MessageData(std::string, std::string);
     ~MessageData();
 
+	messageReceivers whoReceives = AllComponents;
     std::string messageType;
-    std::size_t senderID;
-    std::size_t intendedReceiverID;
+    std::size_t senderID = 0;
+    std::size_t intendedReceiverID = 0;
+
+	decomposedData serialize()override;
+	void createFrom(const decomposedData&)override;
 
     //std::string printText;
     std::vector<decomposedData> messageContents;
 
-    MessageData processPythonFunc(boost::python::object&, size_t, const std::map<std::string, size_t>&)const;
 
-    inline MessageData setMessageType(std::string type){
+
+    MessageData processPythonFunc(boost::python::object&, size_t, const std::map<std::string, size_t>&, std::string)const;
+
+    inline MessageData *setMessageType(std::string type){
             messageType = type;
-            return *this;
+            return this;
     }
-    inline MessageData setSenderID(size_t ID){
+    inline MessageData *setSenderID(size_t ID){
         senderID = ID;
-        return *this;
+        return this;
     }
-    inline MessageData setIntendedReceiverID(size_t ID){
+    inline MessageData *setIntendedReceiverID(size_t ID){
         intendedReceiverID = ID;
-        return *this;
+        return this;
     }
-    inline MessageData addMessageContents(decomposedData dData){
+    inline MessageData *addMessageContents(decomposedData dData){
         messageContents.push_back(dData);
-        return *this;
+        return this;
     }
 
 };
@@ -51,6 +62,7 @@ inline MessageData makeMessageData(std::string messageProperties, std::string me
 }
 
 class MessageBus;
+
 
 class MessagingComponent
 {

@@ -1,6 +1,6 @@
 #include "Map.h"
 #include <iostream>
-#include "cryoscom_defs.h"
+#include "cryoscom_defsAndUtils.h"
 #if CRYOSCOM_DEBUG
 	#include "Animator.h"
 #endif // CRYOSCOM_DEBUG
@@ -89,17 +89,17 @@ void Map::addWall(sf::Vector2f first, sf::Vector2f second, bool clockWiseFromFir
 	wall.inside = rotate90(sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2), first);
 
 	float dist = distance(wall.inside - (sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2)), sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2));
-	std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
+	//std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
 	wall.inside.x -= (first.x + second.x) / 2;
 	wall.inside.y -= (first.y + second.y) / 2;
-	std::cout << (first.x + second.x) / 2 << std::endl;
-	std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
+	//std::cout << (first.x + second.x) / 2 << std::endl;
+	//std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
 	wall.inside.x = wall.inside.x / dist;
 	wall.inside.y = wall.inside.y / dist;
-	std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
+	//std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
 	wall.inside.x += (first.x + second.x) / 2;
 	wall.inside.y += (first.y + second.y) / 2;
-	std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
+	//std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
 	walls.push_back(wall);
 }
 

@@ -26,14 +26,53 @@ const std::map<std::string, size_t> &MessageBus::getEntryIDs()const{
     return m_entryIDs;
 }
 
-size_t MessageBus::addMessagingComponent(MessagingComponent *messagingComponent){
+size_t MessageBus::addMessagingComponent(MessagingComponent *messagingComponent, bool dynamicObj){
     messagingComponent->init(m_IDCounter);
     m_messagingComponents[m_IDCounter] = messagingComponent;
     return m_IDCounter++;
+	if (dynamicObj) {
+		m_dynamicMessagingComponents.push_back(messagingComponent);
+	}
+}
+
+MessagingComponent* MessageBus::getMessagingComponent(size_t ID) {
+	return m_messagingComponents[ID];
+}
+
+void MessageBus::setUpdateInterval(float interval) {
+	m_updateInterval = interval;
+}
+
+void MessageBus::startFrame(float delta) {
+	m_addedTime += delta;
+}
+bool MessageBus::canMessage() {
+	if (m_addedTime >= m_updateInterval) {
+		return true;
+	}
+	return false;
+}
+void MessageBus::endFrame() {
+	if (canMessage()) {
+		m_addedTime = 0;
+	}
 }
 
 void MessageBus::addMessage(MessageData *message){
-    m_messageQueue.push(message);
+	if (message->messageType != "NULL") {
+		if (message->messageType == "messages") {
+			for (size_t i = 0; i < message->messageContents.size(); i++)
+			{
+				MessageData *tempMessage = new MessageData();
+				tempMessage->createFrom(message->messageContents[i]);
+				addMessage(tempMessage);
+			}
+		}
+		else {
+			m_messageQueue.push(message);
+		}
+	}
+
 }
 
 void MessageBus::notify(){
@@ -52,9 +91,9 @@ void MessageBus::notify(){
 
 MessageBus::~MessageBus()
 {
-    for (auto const& x : m_messagingComponents)
+    for (auto const& x : m_dynamicMessagingComponents)
     {
-        delete x.second;
+        delete x;
     }
 
     while(!m_messageQueue.empty()){

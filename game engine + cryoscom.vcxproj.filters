@@ -30,9 +30,6 @@
     <ClCompile Include="ToolTip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Skill.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Serializable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -78,6 +75,9 @@
     <ClCompile Include="Animator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="unitManager.h">
@@ -93,9 +93,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ToolTip.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Skill.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Serializable.h">
@@ -143,7 +140,10 @@
     <ClInclude Include="Animator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cryoscom_defs.h">
+    <ClInclude Include="cryoscom_defsAndUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -208,6 +208,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="gameSerializationUtils.dll">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shared_data.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="persistentData.py">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

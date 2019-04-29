@@ -215,9 +215,21 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 
 	move(velocity * seconds);
 	if (Dmodule != nullptr) {
-		if (Dmodule->push.second > 0) {
-			move(Dmodule->push.first * std::min<float>(seconds, Dmodule->push.second));
-			Dmodule->push.second -= seconds;
+		Dmodule->processEffects(seconds, Amodule);
+		Dmodule->stamina += Dmodule->staminaRegen * seconds;
+		if (Dmodule->stamina > 100) {
+			Dmodule->stamina = 100;
+		}
+		if (!Dmodule->pushes.empty()) {
+			for (size_t i = 0; i < Dmodule->pushes.size(); i++)
+			{
+				move(Dmodule->pushes[i].first * std::min<float>(seconds, Dmodule->pushes[i].second));
+				Dmodule->pushes[i].second -= seconds;
+				if (Dmodule->pushes[i].second < 0) {
+					Dmodule->pushes.erase(Dmodule->pushes.begin() + i);
+				}
+			}
+			
 		}
 	}
 

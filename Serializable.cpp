@@ -41,6 +41,22 @@ decomposedData decomposedData::createFrom(std::string passedData){
     return *this;
 }
 
+decomposedData* decomposedData::getChildByName(std::string childName) {
+	for (size_t i = 0; i < childrenObjects.size(); i++)
+	{
+		if (childrenObjects[i].name == childName) {
+			return &childrenObjects[i];
+		}
+		else {
+			decomposedData* tempRetVal = childrenObjects[i].getChildByName(childName);
+			if (tempRetVal != nullptr) {
+				return tempRetVal;
+			}
+		}
+	}
+	return nullptr;
+}
+
 std::string decomposedData::serialize(unsigned int indentation)const{
     std::stringstream ss;
     ss << "{" << type << "," << name << ",";
@@ -62,22 +78,22 @@ std::string decomposedData::getMushedData()const{
     return ss.str();
 }
 
-decomposedData decomposedData::setType(std::string newType){
+decomposedData &decomposedData::setType(std::string newType){
     type = newType;
     return *this;
 }
 
-decomposedData decomposedData::setName(std::string newName){
+decomposedData &decomposedData::setName(std::string newName){
     name = newName;
     return *this;
 }
 
-decomposedData decomposedData::addData(std::string addedData){
+decomposedData &decomposedData::addData(std::string addedData){
     data.push_back(addedData);
     return *this;
 }
 
-decomposedData decomposedData::addChildrenObject(decomposedData childrenObject){
+decomposedData &decomposedData::addChildrenObject(decomposedData childrenObject){
     childrenObjects.push_back(childrenObject);
     return *this;
 }
@@ -117,42 +133,44 @@ std::string composeString(std::vector<decomposedData> decomString){
 }
 
 template<class T>
-std::string serialize(T obj){
+std::string ma_serialize(T obj){
     return obj.serialize();
 }
 
 template<class T>
-T deserialize(std::string data){
+T ma_deserialize(std::string data){
     T tempObj;
     tempObj.createFrom(data);
     return tempObj;
 }
 
 template<>
-std::string serialize<float>(float val){
-    std::stringstream ss;
-    ss << val;
-    return ss.str();
+std::string ma_serialize<float>(float val){
+    return std::to_string(val);
 }
 
 
 template<>
-float deserialize(std::string data){
+float ma_deserialize(std::string data){
     return std::atof(data.c_str());
 }
 
 
 template<>
-std::string serialize<int>(int val){
-    std::stringstream ss;
-    ss << val;
-    return ss.str();
+std::string ma_serialize<int>(int val){
+	return std::to_string(val);
 }
 
 
 template<>
-int deserialize(std::string data){
+int ma_deserialize(std::string data){
     return std::atoi(data.c_str());
+}
+
+template<>
+std::string ma_serialize(unsigned int val)
+{
+	return std::to_string(val);
 }
 
 Serializable::~Serializable()
