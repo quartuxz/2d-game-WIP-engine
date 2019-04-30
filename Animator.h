@@ -6,6 +6,8 @@
 #include <tuple>
 #include <queue>
 #include <list>
+#include <mutex>
+#include "cryoscom_defsAndUtils.h"
 #include "AnimatorSprite.h"
 #include "ToolTip.h"
 
@@ -60,6 +62,8 @@ private:
 
 	sf::Sprite m_getSprite(AnimatorSprite);
 
+	std::recursive_mutex m_allLock;
+	//MockMutex m_allLock;
 public:
 	Animator(Animator const&) = delete;
 	void operator=(Animator const&) = delete;

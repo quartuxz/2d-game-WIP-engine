@@ -83,7 +83,7 @@ float ma_deserialize_float(std::string);
 template<>
 std::string ma_serialize<int>(int);
 
-int ma_deserialize_string(std::string);
+int ma_deserialize_int(std::string);
 
 template<>
 std::string ma_serialize<unsigned int>(unsigned int);

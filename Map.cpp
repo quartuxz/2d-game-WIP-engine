@@ -28,6 +28,9 @@ void Map::update(unit *units)
 {
 	for (size_t o = 0; o < walls.size(); o++)
 	{
+		if (!walls[o].isActive) {
+			continue;
+		}
 		#if CRYOSCOM_DEBUG
 			sf::VertexArray lines(sf::LinesStrip, 2);
 			lines[0].position = sf::Vector2f(walls[o].wall.first.x, walls[o].wall.first.y);
@@ -69,6 +72,7 @@ bool Map::collides(unit *units)
 {
 	for (size_t o = 0; o < walls.size(); o++)
 	{
+		
 		auto body = units->getBody();
 		for (size_t p = 0; p < body.size(); p++)
 		{
@@ -103,10 +107,22 @@ void Map::addWall(sf::Vector2f first, sf::Vector2f second, bool clockWiseFromFir
 	walls.push_back(wall);
 }
 
+void Map::addNamedWall(sf::Vector2f first, sf::Vector2f second, std::string name, bool clockWiseFromFirst) {
+	addWall(first, second, clockWiseFromFirst);
+	m_wallNames[name] = walls.size()-1;
+}
 
-std::vector<Wall> Map::getWalls() const
-{
+std::map<std::string, size_t> Map::getWallNames()const {
+	return m_wallNames;
+}
+
+std::vector<Wall> Map::getWallsConst()const {
 	return walls;
+}
+
+std::vector<Wall> *Map::getWalls()
+{
+	return &walls;
 }
 
 Map::~Map()

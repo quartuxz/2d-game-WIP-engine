@@ -4,6 +4,7 @@
 #include <tuple>
 #include <functional>
 #include <random>
+#include <mutex>
 #include <stack>
 #include <math.h>
 #include <SFML/Graphics.hpp>
@@ -25,6 +26,8 @@ enum unitType {
 class unit
 {
 private:
+
+	//std::mutex m_allMutex;
 
 	std::vector<std::pair<sf::Vector2f, float>> body;
 	sf::Sprite texture;

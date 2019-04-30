@@ -11,8 +11,7 @@
 #include <thread>
 #include "Menu.h"
 #include "ToolTip.h"
-
-
+#include "MessageBus.h"
 
 
 
@@ -121,6 +120,8 @@ public:
 
 	endLevelTypes hasLevelEnded()const;
 
+	Map* getMap()const;
+
 	void startLevel();
 	void endLevel();
 
@@ -135,7 +136,7 @@ public:
 	void setPlayerWeapon(Weapon*);
 	//TODO: create a layer render system, to combine effects over the player/bullet etc, integrate with worldTextures and animation
 	//DONE!^; reffer to the Animator singleton, in Animator.h
-	void update(float, sf::RenderWindow&);
+	void update(float, sf::RenderWindow&, MessageBus*);
 
 	//TODO: create tooltip system that shows useful information once the player comes close;
 	//interacts with the place gear on map function, such that when a player comes near a piece gear, a tooltip with its stats shows up

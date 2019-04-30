@@ -1,10 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-
+#include "Serializable.h"
 
 
 enum behaviourNames {
-	opensMenu, resumesGame, removesGearPiece, buysItem
+	opensMenu, resumesGame, removesGearPiece, buysItem, sendsMessage
 };
 
 std::string behaviourNameToString(behaviourNames);
@@ -18,9 +18,12 @@ struct behaviourParameters {
 
 	unsigned int goldCost;
 
+	decomposedData messageData;
+
 	std::string itemBought;
 	std::string gearPieceRemoved;
 };
+
 
 class MenuItem
 {
@@ -28,6 +31,10 @@ private:
 	sf::Rect<float> m_item;
 
 	sf::Vector2f moveTransform;
+
+	sf::Text m_buttonText;
+
+	bool m_buttonTextSet = false;
 
     bool m_firstClick = true;
 
@@ -49,6 +56,8 @@ public:
 	void setPosition(sf::Vector2f);
 	sf::Vector2f getPosition()const;
 	sf::Vector2f getDimension()const;
+
+	void setButtonText(std::string, float, sf::Color, unsigned int);
 
 	void reestablishInitialPostion();
 

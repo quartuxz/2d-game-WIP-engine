@@ -1,6 +1,17 @@
 #include "MenuItem.h"
 #include <iostream>
+#include "ToolTip.h"
 
+
+std::string ReplaceString(std::string subject, const std::string& search,
+	const std::string& replace) {
+	size_t pos = 0;
+	while ((pos = subject.find(search, pos)) != std::string::npos) {
+		subject.replace(pos, search.length(), replace);
+		pos += replace.length();
+	}
+	return subject;
+}
 
 std::string behaviourNameToString(behaviourNames behaviourName)
 {
@@ -25,6 +36,9 @@ behaviourNames stringToBehaviourName(std::string name)
 	}
 	else if (name == "resumesGame") {
 		return resumesGame;
+	}
+	else if (name == "runsMessage") {
+		return sendsMessage;
 	}
 	return resumesGame;
 }
@@ -65,6 +79,21 @@ MenuItem::MenuItem(sf::Rect<float> dim) :
         m_clickTimer.restart();
 }
 
+void MenuItem::setButtonText(std::string text, float margins, sf::Color textColor, unsigned int style) {
+	text = ReplaceString(text, "@", "\n");
+	float minMarginsInPixels = std::min(margins * m_item.width, margins * m_item.height);
+	m_buttonTextSet = true;
+	m_buttonText.setStyle(style);
+	m_buttonText.setFillColor(textColor);
+	m_buttonText.setFont(*ToolTip::getFont());
+	m_buttonText.setString(text);
+	m_buttonText.setPosition(sf::Vector2f(m_item.left + minMarginsInPixels, m_item.top + minMarginsInPixels));
+
+	size_t lines = std::count(text.begin(), text.end(), '\n');
+	lines++;
+	m_buttonText.setCharacterSize(std::min((m_item.width - (minMarginsInPixels * 2)) / (text.length() / lines), (m_item.height - (minMarginsInPixels * 2)) / lines));
+}
+
 void MenuItem::addbehaviourFromString(std::vector<std::string> behaviours)
 {
 	behaviourParameters tempBehaviourParam;
@@ -76,6 +105,9 @@ void MenuItem::addbehaviourFromString(std::vector<std::string> behaviours)
 		tempBehaviourParam.menuTo = behaviours[1];
 		break;
 	case resumesGame:
+		break;
+	case sendsMessage:
+		tempBehaviourParam.messageData.createFrom(behaviours[1]);
 		break;
 	default:
 		break;
@@ -123,16 +155,16 @@ void MenuItem::setTexture(sf::Sprite tex)
 	m_tex.setScale(sf::Vector2f(m_item.width/m_tex.getGlobalBounds().width, m_item.height / m_tex.getGlobalBounds().height));
 }
 
-void MenuItem::draw(sf::RenderWindow *window, sf::Vector2f viewDisplacement)
+void MenuItem::draw(sf::RenderWindow* window, sf::Vector2f viewDisplacement)
 {
 	//temporary texture for menuItem, a blue square the size of the target bounding rectangle.
 	if (m_tex.getTexture() == nullptr) {
 		sf::RectangleShape tempRectS;
-		tempRectS.setFillColor(sf::Color(55, 10,0, 150));
+		tempRectS.setFillColor(sf::Color(55, 10, 0, 150));
 		tempRectS.setSize(sf::Vector2f(m_item.width, m_item.height));
 		tempRectS.setPosition(sf::Vector2f(m_item.left, m_item.top));
-		tempRectS.setOutlineThickness(10);
-		tempRectS.setOutlineColor(sf::Color(10,10,10,100));
+		tempRectS.setOutlineThickness(5);
+		tempRectS.setOutlineColor(sf::Color(10, 10, 10, 100));
 		tempRectS.move(viewDisplacement + moveTransform);
 		window->draw(tempRectS);
 	}
@@ -140,7 +172,12 @@ void MenuItem::draw(sf::RenderWindow *window, sf::Vector2f viewDisplacement)
 
 		m_tex.move(viewDisplacement + moveTransform);
 		window->draw(m_tex);
-		m_tex.move(-(viewDisplacement +moveTransform));
+		m_tex.move(-(viewDisplacement + moveTransform));
+	}
+	if (m_buttonTextSet) {
+		m_buttonText.move(viewDisplacement + moveTransform);
+		window->draw(m_buttonText);
+		m_buttonText.move(-(viewDisplacement + moveTransform));
 	}
 }
 

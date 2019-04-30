@@ -24,6 +24,10 @@ public:
 	void setScale(float);
 	void setPosition(sf::Vector2f);
 
+	static sf::Font* getFont() {
+		return &m_font;
+	}
+
 	void setTexture(AnimatorSprite);
 
 	float getScale()const;

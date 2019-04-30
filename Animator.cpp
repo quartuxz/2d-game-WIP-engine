@@ -111,23 +111,26 @@ sf::Texture* Animator::getTexture(unsigned int ID)
 
 unsigned int Animator::addTexture(std::string fileName)
 {
+	m_allLock.lock();
 	sf::Texture *tempTex = new sf::Texture();
 	tempTex->loadFromFile(fileName);
 	m_fileIDs[fileName] = m_TextureIDCounter;
 	m_fileNames[m_TextureIDCounter] = fileName;
 	m_textures[m_TextureIDCounter++] = tempTex;
+	m_allLock.unlock();
 	return (m_TextureIDCounter-1);
 }
 
 void Animator::addOneFrameSprite(const AnimatorSprite &aSprite)
 {
+	//m_allLock.lock();
     if (m_spritesToDraw.size() < (aSprite.drawLayer + 1)) {
 		m_spritesToDraw.resize(aSprite.drawLayer + 1);
 	}
 	if (aSprite.isActive) {
 		m_spritesToDraw[aSprite.drawLayer].push(m_getSprite(aSprite));
 	}
-
+	//m_allLock.unlock();
 }
 
 std::map<std::string, AnimatorSprite>* Animator::getUnqiueAnimatorSprites()
@@ -143,7 +146,7 @@ void Animator::addOneFrameSprite(ToolTip *toolTip)
 
 void Animator::update(float timeDelta)
 {
-
+	m_allLock.lock();
 	std::list<AnimatorSprite>::iterator it2;
 	for (it2 = m_decals.begin(); it2 != m_decals.end(); ++it2)
 	{
@@ -164,11 +167,14 @@ void Animator::update(float timeDelta)
 			++it;
 		}
 	}
+	m_allLock.unlock();
 }
 
 void Animator::addDecal(const AnimatorSprite &decal)
 {
+	m_allLock.lock();
 	m_decals.push_back(decal);
+	m_allLock.unlock();
 }
 
 std::string Animator::getTextureFileName(unsigned int textureID)
@@ -183,16 +189,20 @@ unsigned int Animator::getTextureID(std::string fileName)
 
 sf::FloatRect Animator::getTextureLocalBounds(unsigned int textureID)
 {
+	m_allLock.lock();
 	sf::Sprite tempSprite;
 	tempSprite.setTexture(*m_textures[textureID]);
+	m_allLock.unlock();
 	return tempSprite.getLocalBounds();
 }
 
 AnimatorSprite* Animator::playAnimation(std::queue<AnimatorSprite> animation)
 {
+	m_allLock.lock();
 	AnimatorSprite *controller = new AnimatorSprite(animation.front());
 	controller->offsets = true;
 	m_animations.push_back(std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>(animation, controller));
+	m_allLock.unlock();
 	return controller;
 }
 
@@ -203,12 +213,15 @@ AnimatorSprite* Animator::playAnimation(unsigned int animationPresetID)
 
 unsigned int Animator::addAnimationPreset(std::queue<AnimatorSprite> animationPreset)
 {
+	m_allLock.lock();
 	m_animationPresets[m_animationPresetIDCounter++] = animationPreset;
+	m_allLock.unlock();
 	return m_animationPresetIDCounter;
 }
 
 void Animator::draw()
 {
+	m_allLock.lock();
 	for (auto const& x : m_uniqueAnimatorSprites)
 	{
 		addOneFrameSprite(x.second);
@@ -235,6 +248,7 @@ void Animator::draw()
 		m_toolTipsToDraw[i]->draw(*m_window);
 	}
 	m_toolTipsToDraw.clear();
+	m_allLock.unlock();
 }
 
 void Animator::instantDraw(AnimatorSprite aSprite)

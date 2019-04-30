@@ -1,6 +1,8 @@
 #include "Weapon.h"
 #include <iostream>
 #include "Animator.h"
+#include "cryoscom_defsAndUtils.h"
+
 
 void Weapon::setBulletTex(sf::Sprite &circleTex)
 {
@@ -69,7 +71,9 @@ void Weapon::m_fire(sf::Vector2f unitVec)
 	m_bullets.back()->Dmodule = m_wieldingUnit->Dmodule;
 	m_bullets.back()->getBody()->setTexture(m_bulletTex);
 	m_bullets.back()->getBody()->setAnimatorSprite(m_bulletATex);
+#if ADD_PLAYER_VELOCITY_TO_BULLET
 	m_bullets.back()->getBody()->addVelocity(m_wieldingUnit->getVelocity());
+#endif
 }
 
 void Weapon::fire(sf::Vector2f unitVec)

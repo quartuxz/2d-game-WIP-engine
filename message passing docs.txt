@@ -1,0 +1,2 @@
+there are a few different types of core messages in Gold Standard Game Engine;
+	"messages":this type converts all of its MessageData into other messages.

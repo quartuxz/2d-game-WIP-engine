@@ -231,6 +231,14 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 			}
 			
 		}
+
+		Dmodule->hitPoints -= (Dmodule->damageTakenPerSecond * seconds);
+		if (Dmodule->hitPoints <= 0 && recentlyDead) {
+			kill();
+		}
+		if (Dmodule->hitPoints > Dmodule->hitPoinCap) {
+			Dmodule->hitPoints = Dmodule->hitPoinCap;
+		}
 	}
 
 	m_collide(colliders);
@@ -246,18 +254,6 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 	if (animationConroller != nullptr) {
 		animationConroller->position = body[0].first;
 		animationConroller->rotation = animatorSprite.rotation;
-	}
-
-	
-
-	if (Dmodule != nullptr) {
-		Dmodule->hitPoints -= (Dmodule->damageTakenPerSecond *seconds);
-		if(Dmodule->hitPoints <= 0 && recentlyDead){
-            kill();
-		}
-		if (Dmodule->hitPoints > Dmodule->hitPoinCap) {
-			Dmodule->hitPoints = Dmodule->hitPoinCap;
-		}
 	}
 
 

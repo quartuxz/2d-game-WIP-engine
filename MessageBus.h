@@ -2,6 +2,10 @@
 #define MESSAGEBUS_H
 #include<queue>
 #include<map>
+#include <list>
+#include <mutex>
+#include <thread>
+#include <stack>
 #include "MessagingComponent.h"
 
 class MessageBus
@@ -15,6 +19,8 @@ class MessageBus
         const std::map<std::string, size_t> &getEntryIDs()const;
         //
 
+
+
 		void setUpdateInterval(float);
 
 		void startFrame(float);
@@ -27,15 +33,24 @@ class MessageBus
         void addMessage(MessageData*);
         void notify();
 
+		MessageBus &operator=(const MessageBus&);
+
         ~MessageBus();
 
     private:
+
+		void m_joinThreads();
+
+		std::recursive_mutex m_allMutex;
+
         //debugging infinite loops
         size_t m_maxChainLength = 10;
         size_t m_chainLength = 0;
         MessageData m_lastMessage;
         //~
 
+		
+		std::stack<std::thread*> m_threadPool;
 		//capping messaging per second
 		float m_addedTime = 0;
 		float m_updateInterval = 0.5;
@@ -52,7 +67,11 @@ class MessageBus
 		//
 
         //core messaging
+		std::list<MessageData*> m_echoMessages;
+
         std::queue<MessageData*> m_messageQueue;
+		std::queue<MessageData*> m_endOfFrameGarbageCollectionQueue;
+
         static size_t m_IDCounter;
         std::map<size_t, MessagingComponent*> m_messagingComponents;
 };

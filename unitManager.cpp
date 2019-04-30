@@ -1,13 +1,18 @@
 #include "unitManager.h"
 #include <iostream>
 #include <map>
+#include <mutex>
 #include "Animator.h"
+#include "cryoscom_defsAndUtils.h"
 
 
 const float UnitManager::m_itemPickupCooldown = 2;
 
-
-
+#if MULTITHREADED_SCRIPTING_AND_MESSAGING
+std::recursive_mutex mutexLock;
+#else
+MockMutex mutexLock;
+#endif
 
 void MarketMenu::createStaticMenuLayout()
 {
@@ -65,7 +70,7 @@ void MarketMenu::onDraw(bool beforeDraw, sf::Vector2f viewDisplacement)
 
 void MarketMenu::addToolTips(Gear playerGear)
 {
-
+	mutexLock.lock();
 	m_playerGear.clear();
 
 	AnimatorSprite tempASprite;
@@ -105,6 +110,7 @@ void MarketMenu::addToolTips(Gear playerGear)
 		}
 		m_playerGear.push_back(tempToolTip);
 	}
+	mutexLock.unlock();
 }
 
 void MarketMenu::update(updateEvent)
@@ -113,6 +119,7 @@ void MarketMenu::update(updateEvent)
 
 void UnitManager::m_updateAIWeapons(std::vector<Weapon*> AIWeapons)
 {
+	mutexLock.lock();
 	for (size_t i = 0; i < AIWeapons.size(); i++)
 	{
 		std::list<Bullet*> AIWeaponBullets = AIWeapons[i]->getBullets();
@@ -127,21 +134,26 @@ void UnitManager::m_updateAIWeapons(std::vector<Weapon*> AIWeapons)
 			}
 		}
 	}
+	mutexLock.unlock();
 }
 
 void UnitManager::m_updateAI(float timeDelta, std::vector<unit*> AIsSubset, std::vector<unit*> nonPlayerUnits)
 {
+	mutexLock.lock();
 	for (size_t i = 0; i < AIsSubset.size(); i++)
 	{
 		AIsSubset[i]->update(timeDelta, nonPlayerUnits);
 		m_map->update(AIsSubset[i]);
 	}
+	mutexLock.unlock();
 }
 
 void UnitManager::m_updatePlayer(float timeDelta ,std::vector<unit*> nonPlayerUnits)
 {
+	mutexLock.lock();
 	m_player->update(timeDelta, nonPlayerUnits);
 	m_map->update(m_player);
+	mutexLock.unlock();
 }
 
 Gear UnitManager::getGear() const
@@ -151,40 +163,53 @@ Gear UnitManager::getGear() const
 
 void UnitManager::addHealthPotions(unsigned int amount)
 {
+	mutexLock.lock();
 	m_healthPotions += amount;
+	mutexLock.unlock();
 }
 
 void UnitManager::addGold(unsigned int amount)
 {
+	mutexLock.lock();
 	m_gold += amount;
+	mutexLock.unlock();
 }
 
 bool UnitManager::subtractGold(int amount)
 {
+	mutexLock.lock();
 	if (m_gold >= amount) {
 		m_gold -= amount;
+		mutexLock.unlock();
 		return true;
 	}
+	mutexLock.unlock();
 	return false;
 }
 
 bool UnitManager::removeGearPiece(std::string gearPieceName)
 {
-	return m_gear.removeGearPiece(gearPieceName);
+	mutexLock.lock();
+	bool retVal = m_gear.removeGearPiece(gearPieceName);
+	mutexLock.unlock();
+	return retVal;
 }
 
 void UnitManager::drinkPotion()
 {
+	mutexLock.lock();
 	if (m_healthPotions > 0) {
 		m_player->Dmodule->hitPoints += 100;
 		m_healthPotions--;
 	}
-
+	mutexLock.unlock();
 }
 
 void UnitManager::setToolTipsShow(bool toolTipsShown)
 {
+	mutexLock.lock();
 	m_showToolTips = toolTipsShown;
+	mutexLock.unlock();
 }
 
 bool UnitManager::areToolTipsShown() const
@@ -194,16 +219,22 @@ bool UnitManager::areToolTipsShown() const
 
 void UnitManager::removeToolTip(unsigned int ID)
 {
+	mutexLock.lock();
 	m_toolTips[ID].second = false;
+	mutexLock.unlock();
 }
 
 void UnitManager::setProgressionFile(std::string fileName)
 {
+	mutexLock.lock();
 	m_progressionFileName = fileName;
+	mutexLock.unlock();
 }
+
 
 void UnitManager::loadGearProgression()
 {
+	mutexLock.lock();
 	std::string line;
 	std::ifstream fileRead(m_progressionFileName);
 	if (fileRead.is_open()) {
@@ -273,15 +304,17 @@ void UnitManager::loadGearProgression()
 	}
 
 	assignPlayerGear(true);
-
+	mutexLock.unlock();
 }
 
 void UnitManager::saveGearProgression()
 {
+	mutexLock.lock();
 	m_gear.saveGearToFile(m_progressionFileName);
 	std::ofstream editFile(m_progressionFileName, std::ios::app);
 	editFile << "bag;" << m_healthPotions << ";" << m_gold << ";" << std::endl;
 	editFile.close();
+	mutexLock.unlock();
 }
 
 endLevelTypes UnitManager::hasLevelEnded() const
@@ -289,32 +322,47 @@ endLevelTypes UnitManager::hasLevelEnded() const
 	return m_levelHasEnded;
 }
 
+Map* UnitManager::getMap() const
+{
+	return m_map;
+}
+
 void UnitManager::startLevel()
 {
+	mutexLock.lock();
 	assignPlayerGear();
 	m_needsAnUpdate = true;
+	mutexLock.unlock();
 }
 
 void UnitManager::endLevel()
 {
+	mutexLock.lock();
 	m_needsAnUpdate = false;
+	mutexLock.unlock();
 }
 
 float UnitManager::getDistanceToPlayer(sf::Vector2f pos) const
 {
-	return distance(pos, m_player->getBody()[0].first);
+	mutexLock.lock();
+	float retVal = distance(pos, m_player->getBody()[0].first);
+	mutexLock.unlock();
+	return retVal;
 }
 
 void UnitManager::addInteractable(Menu *menu, sf::Vector2f pos)
 {
+	mutexLock.lock();
 	interactable tempInteractable;
 	tempInteractable.menu = menu;
 	tempInteractable.position = pos;
 	m_interactables.push_back(tempInteractable);
+	mutexLock.unlock();
 }
 
 Menu * UnitManager::interact()
 {
+	mutexLock.lock();
 	for (size_t i = 0; i < m_interactables.size(); i++)
 	{
 		if (distance(m_interactables[i].position, m_player->getBody()[0].first) < m_interactDistance) {
@@ -322,15 +370,19 @@ Menu * UnitManager::interact()
             if(tempMarketMenu != nullptr){
                 tempMarketMenu->addToolTips(m_gear);
             }
+			mutexLock.unlock();
 			return m_interactables[i].menu;
 		}
 	}
+	mutexLock.unlock();
 	return nullptr;
 }
 
 UnitManager::UnitManager()
 {
+	mutexLock.lock();
 	m_map = new Map();
+	mutexLock.unlock();
 	
 }
 
@@ -341,12 +393,16 @@ UnitManager::UnitManager(Map *map):
 
 void UnitManager::setMap(Map *map)
 {
+	mutexLock.lock();
 	m_map = map;
+	mutexLock.unlock();
 }
 
 void UnitManager::setPlayerWeapon(Weapon *weapon)
 {
+	mutexLock.lock();
 	m_playerWeapon = weapon;
+	mutexLock.unlock();
 }
 
 unsigned int UnitManager::getHealthPotions()const{
@@ -359,13 +415,14 @@ unit *UnitManager::getClosestAIUnit()const{
 }
 
 //TODO: create a layer render system, to combine effects over the player/bullet etc, integrate with worldTextures and animation
-void UnitManager::update(float timeDelta, sf::RenderWindow &window)
+void UnitManager::update(float timeDelta, sf::RenderWindow &window, MessageBus *gameBus)
 {
 
-
+	mutexLock.lock();
     std::vector<unit*> killedUnits;
 	if (m_player->isDead) {
 		m_levelHasEnded = playerDied;
+		mutexLock.unlock();
 		return;
 	}
 
@@ -396,7 +453,7 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window)
                 m_closestAIUnit = m_AIs[i]->getUnit();
                 minDistance = tempDistance;
             }
-			m_AIs[i]->update(timeDelta, std::vector<unit*>(1, m_player));
+			m_AIs[i]->update(timeDelta, std::vector<unit*>(1, m_player), gameBus);
 
 			m_AIs[i]->drawBullets(window);
 			//window.draw(m_AIs[i]->getUnit()->getTexture());
@@ -494,19 +551,23 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window)
 		}
 	}
 
-
+	mutexLock.unlock();
 	////map updating
 
 }
 
 unsigned int UnitManager::addToolTip(ToolTip *toolTip)
 {
+	mutexLock.lock();
 	m_toolTips.push_back(std::pair<ToolTip*, bool>(toolTip, true));
-	return (m_toolTips.size() - 1);
+	size_t retVal = m_toolTips.size() - 1;
+	mutexLock.unlock();
+	return retVal;
 }
 
 void UnitManager::loadLootTable(std::string fileName)
 {
+	mutexLock.lock();
 	std::string line;
 	std::ifstream fileRead(fileName);
 	if (fileRead.is_open()) {
@@ -552,7 +613,7 @@ void UnitManager::loadLootTable(std::string fileName)
 		}
 		fileRead.close();
 	}
-
+	mutexLock.unlock();
 }
 
 Weapon * UnitManager::getWeapon()
@@ -567,6 +628,7 @@ unit * UnitManager::getPlayer()
 
 void UnitManager::placeGearOnMap(sf::Vector2f pos, GearPiece gearPiece)
 {
+	mutexLock.lock();
 	gearPiece.tex.rotation = rand() % 360;
 	m_mapGearPieces.push_back(std::pair<sf::Vector2f, GearPiece>(pos, gearPiece));
 	ToolTip *tempToolTip = new ToolTip();
@@ -578,11 +640,13 @@ void UnitManager::placeGearOnMap(sf::Vector2f pos, GearPiece gearPiece)
 	tempToolTip->makeTooltipForGear(gearPiece);
 	tempToolTip->setPosition(pos);
 	m_itemToolTipID[gearPiece] = addToolTip(tempToolTip);
+	mutexLock.unlock();
 	//m_toolTips.back().first.position.y += 20;
 }
 
 void UnitManager::pickUpGear()
 {
+	mutexLock.lock();
 	if (m_itemPickupClock.getElapsedTime().asSeconds() > m_itemPickupCooldown) {
 		for (size_t i = 0; i < m_mapGearPieces.size(); i++)
 		{
@@ -597,28 +661,37 @@ void UnitManager::pickUpGear()
 		}
 		m_itemPickupClock.restart();
 	}
+	mutexLock.unlock();
 }
 
 void UnitManager::assignPlayerGear(bool heal)
 {
+	mutexLock.lock();
 	m_gear.assignGear(m_player, heal);
+	mutexLock.unlock();
 	//std::cout << "bullet speed: " << m_player->Amodule->bulletSpeed << ", bullet duration: " << m_player->Amodule->bulletDuration << ", fire rate: " << m_player->Amodule->fireRate << std::endl;
 }
 
 void UnitManager::addPlayerGear(GearPiece gearPiece)
 {
+	mutexLock.lock();
 	m_gear.addGearPiece(gearPiece);
 	assignPlayerGear(gearPiece.healsOnPickup);
+	mutexLock.unlock();
 }
 
 void UnitManager::addAI(EnemyAI *newAI)
 {
+	mutexLock.lock();
 	m_AIs.push_back(newAI);
+	mutexLock.unlock();
 }
 
 void UnitManager::setPlayer(unit *playerUnit)
 {
+	mutexLock.lock();
 	m_player = playerUnit;
+	mutexLock.unlock();
 }
 
 float UnitManager::getLevelScale()const {
@@ -626,11 +699,14 @@ float UnitManager::getLevelScale()const {
 }
 
 void UnitManager::setLevelScale(float val) {
+	mutexLock.lock();
 	m_levelScale = val;
+	mutexLock.unlock();
 }
 
 void UnitManager::createFromFile(std::string fileName)
 {
+	mutexLock.lock();
 	//m_map = new Map();
 	std::string line;
 	std::ifstream fileRead(fileName);
@@ -1032,11 +1108,12 @@ void UnitManager::createFromFile(std::string fileName)
 		fileRead.close();
 		//m_player->getTexture().setTexture();
 	}
-
+	mutexLock.unlock();
 }
 
 UnitManager::~UnitManager()
 {
+	mutexLock.lock();
 	delete m_map;
 	for (size_t i = 0; i < m_AIs.size(); i++)
 	{
@@ -1062,4 +1139,5 @@ UnitManager::~UnitManager()
 	{
 		delete m_toolTips[i].first;
 	}
+	mutexLock.unlock();
 }

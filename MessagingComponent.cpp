@@ -1,5 +1,6 @@
 #include "MessagingComponent.h"
 #include "cryoscom_defsAndUtils.h"
+#include "globalMutexes.h"
 
 MessageData::MessageData(){
 
@@ -50,6 +51,8 @@ void MessageData::createFrom(const decomposedData& DData) {
 
 MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t selfID, const std::map<std::string, size_t> &nameIDMap, std::string gameData)const{
 	//return MessageData();
+	//without_gil no_gil;
+	with_gil gil;
     boost::python::list paramList;
     boost::python::dict IDDictionary;
 
@@ -61,9 +64,13 @@ MessageData MessageData::processPythonFunc(boost::python::object &pyFunc, size_t
     {
         IDDictionary[it.first] = it.second;
     }
+	boost::python::object pyFuncRetVal;
+	{
 
-    boost::python::object pyFuncRetVal = pyFunc(false, boost::python::str(messageType), senderID, intendedReceiverID, paramList, IDDictionary, selfID, boost::python::str(gameData));
-    MessageData retVal;
+		pyFuncRetVal = pyFunc(false, boost::python::str(messageType), senderID, intendedReceiverID, paramList, IDDictionary, selfID, boost::python::str(gameData));
+	
+	}
+	MessageData retVal;
     std::string tempMessageType = boost::python::extract<std::string>(pyFuncRetVal[0]);
     retVal.messageType = tempMessageType;
     retVal.senderID = selfID;
@@ -77,9 +84,9 @@ void MessagingComponent::init(std::size_t ID){
 
 }
 
-void MessagingComponent::processMessage(const MessageData &tempMessage, MessageBus *bus){
-    if(tempMessage.messageType != "NULL"){
-        pv_processMessage(tempMessage, bus);
+void MessagingComponent::processMessage(const MessageData *tempMessage, MessageBus *bus){
+    if(tempMessage->messageType != "NULL"){
+        pv_processMessage(*tempMessage, bus);
     }
 
 }

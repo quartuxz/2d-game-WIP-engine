@@ -5,10 +5,12 @@
 #include <vector>
 #include <map>
 #include <stack>
+#include <mutex>
 #include "Menu.h"
 #include "unitManager.h"
 #include "MessageBus.h"
 #include "Logger.h"
+
 
 
 class GameScript : public MessagingComponent {
@@ -48,8 +50,11 @@ private:
 	sf::RenderWindow m_window;
 	std::map<std::string ,Menu*> m_gameMenus;
 	std::string m_activeMenu = "mainMenu";
-	UnitManager *m_currentLevel = new UnitManager();
+	UnitManager * m_currentLevel = new UnitManager();
 	
+	std::recursive_mutex m_dataLock;
+	//MockMutex m_dataLock;
+
 	Logger m_gameLogger;
 	MessageBus m_gameBus;
 	void pv_processMessage(const MessageData&, MessageBus*)override;

@@ -19,12 +19,14 @@ struct Wall {
 	std::pair<sf::Vector2f, sf::Vector2f> wall;
 	sf::Vector2f inside;
 	sf::Vector2f getOutside();
+	bool isActive = true;
 };
 
 class Map
 {
 private:
 	std::vector<Wall> walls;
+	std::map<std::string, size_t> m_wallNames;
 public:
 	Map();
 	void update(std::vector<unit*>);
@@ -32,9 +34,14 @@ public:
 
 	bool collides(unit*);
 
+	void addNamedWall(sf::Vector2f, sf::Vector2f, std::string, bool clockWiseFromFirst = true);
+
 	void addWall(sf::Vector2f, sf::Vector2f, bool clockWiseFromFirst = true);
 
-	std::vector<Wall> getWalls()const;
+	std::vector<Wall> getWallsConst()const;
+	std::vector<Wall> *getWalls();
+	std::map<std::string, size_t> getWallNames()const;
+
 	~Map();
 };
 

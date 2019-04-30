@@ -1,5 +1,14 @@
 #pragma once
 #define CRYOSCOM_DEBUG false
+#define ADD_PLAYER_VELOCITY_TO_BULLET false
+#define MULTITHREADED_SCRIPTING_AND_MESSAGING true
+
+
+class MockMutex {
+public:
+	void lock(){}
+	void unlock(){}
+};
 
 inline int fast_atou(const char* str)
 {

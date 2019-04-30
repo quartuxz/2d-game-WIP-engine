@@ -24,9 +24,12 @@ struct MessageData : public Serializable{
     ~MessageData();
 
 	messageReceivers whoReceives = AllComponents;
-    std::string messageType;
+    std::string messageType = "";
     std::size_t senderID = 0;
     std::size_t intendedReceiverID = 0;
+
+	float echoDelay = 5;
+	float currentEchoAddedTime = 0;
 
 	decomposedData serialize()override;
 	void createFrom(const decomposedData&)override;
@@ -68,7 +71,7 @@ class MessagingComponent
 {
     public:
         MessagingComponent();
-        void processMessage(const MessageData&, MessageBus*);
+        void processMessage(const MessageData*, MessageBus*);
         virtual ~MessagingComponent();
         void init(std::size_t);
     protected:

@@ -50,16 +50,63 @@ void Menu::createMenuFromFile(std::string fileName)
 			else if (tokens[0] == "//") {
 				continue;
 			}
-			m_menuItems.push_back(MenuItem(sf::Rect<float>(sf::Vector2f(std::atof(tokens[0].c_str())*m_window->getSize().x, std::atof(tokens[1].c_str())*m_window->getSize().y),
-														   sf::Vector2f(std::atof(tokens[2].c_str())*m_window->getSize().x, std::atof(tokens[3].c_str())*m_window->getSize().y))));
-			sf::Texture *tempTex = new sf::Texture();
-			tempTex->loadFromFile(tokens[4]);
-			m_toDeleteTextures.push_back(tempTex);
-			sf::Sprite tempSprite;
-			tempSprite.setTexture(*tempTex);
-			m_menuItems.back().setTexture(tempSprite);
+			else if (tokens[0] == "load") {
+				createMenuFromFile(tokens[1]);
+				continue;
+			}
+			else if (tokens[0] == "whenOpened") {
+				MenuItem tempMenuItem = MenuItem(MenuItem(sf::Rect<float>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))));
+				for (size_t i = 1; i < tokens.size(); i++)
+				{
+					std::vector<std::string> behaviour;
 
-			for (size_t i = 5; i < tokens.size(); i++)
+					std::string delimiter = ",";
+
+					size_t pos = 0;
+					pos = tokens[i].find(delimiter);
+					while (pos != std::string::npos) {
+						behaviour.push_back(tokens[i].substr(0, pos));
+						tokens[i].erase(0, pos + delimiter.length());
+						pos = tokens[i].find(delimiter);
+					}
+					tempMenuItem.addbehaviourFromString(behaviour);
+				}
+				//m_onOpenParams = tempMenuItem.getBehaviour();
+			}
+			sf::Rect<float> menuItemDim(sf::Vector2f(std::atof(tokens[0].c_str()) * m_window->getSize().x, std::atof(tokens[1].c_str()) * m_window->getSize().y),
+				sf::Vector2f(0, 0));
+
+			if (tokens[2] == "=") {
+				menuItemDim.height = std::atof(tokens[3].c_str()) * m_window->getSize().y;
+				menuItemDim.width = menuItemDim.height;
+			}
+			else if (tokens[3] == "=") {
+				menuItemDim.width = std::atof(tokens[2].c_str()) * m_window->getSize().x;
+				menuItemDim.height = menuItemDim.width;
+			}
+			else {
+				menuItemDim.width = std::atof(tokens[2].c_str()) * m_window->getSize().x;
+				menuItemDim.height = std::atof(tokens[3].c_str()) * m_window->getSize().y;
+			}
+
+			m_menuItems.push_back(MenuItem(menuItemDim));
+			sf::Sprite tempSprite;
+			if (tokens[4] != "" && tokens[4] != "-") {
+				sf::Texture* tempTex = new sf::Texture();
+				tempTex->loadFromFile(tokens[4]);
+				m_toDeleteTextures.push_back(tempTex);
+
+				tempSprite.setTexture(*tempTex);
+				m_menuItems.back().setTexture(tempSprite);
+			}
+			else if (tokens[4] == "transparent") {
+				tempSprite.setColor(sf::Color(0, 0, 0, 0));
+				m_menuItems.back().setTexture(tempSprite);
+			}
+
+
+			m_menuItems.back().setButtonText(tokens[5], std::atof(tokens[6].c_str()), sf::Color(std::atoi(tokens[7].c_str()), std::atoi(tokens[8].c_str()), std::atoi(tokens[9].c_str()), std::atoi(tokens[10].c_str())), std::atoi(tokens[11].c_str()));
+			for (size_t i = 12; i < tokens.size(); i++)
 			{
 				std::vector<std::string> behaviour;
 
@@ -79,6 +126,7 @@ void Menu::createMenuFromFile(std::string fileName)
 		fileRead.close();
 	}
 }
+
 
 std::vector<behaviourParameters> Menu::onClick(sf::Vector2f mousePos, bool clicked)
 {

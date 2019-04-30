@@ -2,20 +2,6 @@
 #import shared_data
 import decomposedData_python
 
-def makeDDataMessage(messageType, senderID, intendedReceiverID, *DData):
-    retDDataMessage = decomposedData_python.decomposedData()
-    retDDataMessage.data.append(messageType)
-    retDDataMessage.data.append(str(senderID))
-    retDDataMessage.data.append(str(intendedReceiverID))
-    for i in DData:
-       retDDataMessage.childrenObjects.append(i)
-    return retDDataMessage
-
-def formatToSend(*DData):
-    retStr = ""
-    for i in DData:
-        retStr = retStr +  DData.serialize() + ";"
-    return retStr
 
 def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramList, IDDictionary, selfID, metaData):
     if senderID == selfID:
@@ -69,7 +55,7 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
     gameDataRetMessageDData.childrenObjects.append(gameData)
     #shm.close()
 
-    return("displayDecal", 0, retDData.serialize() + ";")
+    return("displayDecal", 0, decomposedData_python.formatToSend(retDData))
 
-    return ("messages", 0, makeDDataMessage("displayDecal", selfID, 0, retDData).serialize() + ";" + makeDDataMessage("editGameData", selfID, 0, gameData).serialize()+ ";")
+    return ("messages", 0, decomposedData_python.formatToSend(makeDDataMessage("displayDecal", selfID, 0, retDData), makeDDataMessage("editGameData", selfID, 0, gameData)))
 

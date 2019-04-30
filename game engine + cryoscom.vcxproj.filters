@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{6694e3c7-6c5b-4864-a36e-7ee8a43a93cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="unitManager.cpp">
@@ -76,6 +79,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globalMutexes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -146,6 +152,9 @@
     <ClInclude Include="Logger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="globalMutexes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="bullet.png">
@@ -213,9 +222,6 @@
     <None Include="shared_data.py">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="persistentData.py">
-      <Filter>Resource Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Font Include="good times rg.ttf">
@@ -252,6 +258,9 @@
     </Text>
     <Text Include="oldMap2.txt">
       <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="message passing docs.txt">
+      <Filter>docs</Filter>
     </Text>
   </ItemGroup>
 </Project>

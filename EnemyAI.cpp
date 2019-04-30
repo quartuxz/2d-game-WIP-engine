@@ -3,7 +3,7 @@
 #include <math.h>
 #include <limits>
 #include <random>
-
+#include "globalMutexes.h"
 
 
 bool EnemyAI::globalChecksForAccuracy = true;
@@ -47,19 +47,17 @@ void EnemyAI::setHead(unit *head, sf::Vector2f followingDistance){
     m_followingDistance = followingDistance;
 }
 
-void EnemyAI::update(float timeDelta, std::vector<unit*> targets)
+void EnemyAI::update(float timeDelta, std::vector<unit*> targets, MessageBus *gameBus)
 {
+	//without_gil no_gil;
+	with_gil gil;
+	m_currentAITimeToInterval += timeDelta;
 	unit *chosenTarget = targets[rand() % targets.size()];
 
-    float addedMoveSpeed = 0;
 
-	float distToTarget = 0;
-	float timeToTarget = timeDelta;
 
-    sf::Vector2f shootPos = sf::Vector2f(0,0);
-    bool shootsNow = false;
-
-    if(m_pythonFunc != boost::python::api::object()){
+    if(m_pythonFunc != boost::python::api::object()&& (m_currentAITimeToInterval >= m_AIUpdateInterval)){
+		m_currentAITimeToInterval = 0;
         sf::Vector2f headPos = sf::Vector2f(0,0);
         float headRadius = 0;
         bool hasHead = false;
@@ -84,8 +82,10 @@ void EnemyAI::update(float timeDelta, std::vector<unit*> targets)
         listElement.append(chosenTarget->lastLastPos.x);
         listElement.append(chosenTarget->lastLastPos.y);
         playerPoss.append(listElement);
-
-        boost::python::object retVal = m_pythonFunc(playerPoss, chosenTarget->getBody()[0].second,
+		boost::python::object retVal;
+		{
+			
+			retVal = m_pythonFunc(playerPoss, chosenTarget->getBody()[0].second,
                                                     chosenTarget->getVelocity().x, chosenTarget->getVelocity().y,
                                                     m_controlledWeapon->canFire(),
                                                     m_controlledUnit->getBody()[0].first.x, m_controlledUnit->getBody()[0].first.y, m_controlledUnit->getBody()[0].second,
@@ -93,6 +93,7 @@ void EnemyAI::update(float timeDelta, std::vector<unit*> targets)
                                                     hasHead,
                                                     headPos.x, headPos.y, headRadius,
                                                     m_followingDistance.x, m_followingDistance.y);
+		}
         m_moveToPos.x = boost::python::extract<float>(retVal[0]);
         m_moveToPos.y = boost::python::extract<float>(retVal[1]);
         addedMoveSpeed = boost::python::extract<float>(retVal[2]);
