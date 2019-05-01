@@ -58,7 +58,7 @@ std::queue<AnimatorSprite> Animator::m_updateAnimRecursive(std::queue<AnimatorSp
 
 	AnimatorSprite tempASprite = animation.front();
 
-	if (tempASprite.timeDisplayed > tempASprite.timeElapsed) {
+	if (tempASprite.timeDisplayed > tempASprite.timeElapsed && tempASprite.isActive) {
 		AnimatorSprite lastTempSprite;
 		if (offset.offsets) {
 			lastTempSprite = tempASprite;

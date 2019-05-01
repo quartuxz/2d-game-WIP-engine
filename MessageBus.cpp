@@ -1,8 +1,54 @@
 #include "MessageBus.h"
 #include "Serializable.h"
 #include "cryoscom_defsAndUtils.h"
+#include <limits>
 
 size_t MessageBus::m_IDCounter = 0;
+
+
+
+boost::python::object makePythonFunction(std::string scriptName, std::string functionName) {
+	try
+	{
+		boost::python::str tempStr(scriptName);
+		boost::python::object retObj = boost::python::import(tempStr).attr(boost::python::str(functionName));
+		return retObj;
+	}
+	catch (const boost::python::error_already_set&)
+	{
+		PyErr_Print();
+		while (true) {
+			PyErr_Print();
+		}
+		return boost::python::object();
+	}
+}
+
+void GameScript::pv_processMessage(const MessageData& tempMessage, MessageBus* bus) {
+
+	bus->addMessage(new MessageData(tempMessage.processPythonFunc(m_pythonFunc, p_uniqueID, bus->getEntryIDs(), m_cachedSerializedGameData)));
+}
+
+void GameScript::createFromFile(std::string scriptName)
+{
+	m_pythonFunc = makePythonFunction(scriptName, "gameScript");
+	m_gameData.type = "gameData";
+	m_gameData.name = "scriptGameData";
+	m_cachedSerializedGameData = m_gameData.serialize();
+	//boost::python::object memoryBlockNameRetriever = makePythonFunction("shared_data", "generateMemoryBlock")(1000);
+	//boost::python::object retObj = makePythonFunction("shared_data", "generateMemoryBlock")(10);
+	//m_sharedMemoryBlockName = boost::python::extract<std::string>(retObj[0]);
+}
+
+decomposedData GameScript::getGameData()const {
+	return m_gameData;
+}
+
+void GameScript::setGameData(const decomposedData &DData) {
+	m_gameData = DData;
+	m_cachedSerializedGameData = m_gameData.serialize();
+
+}
 
 MessageBus::MessageBus(){
 
@@ -145,6 +191,22 @@ void MessageBus::addMessage(MessageData *message){
 			if (canMessage()) {
 				notify();
 			}
+		}
+		else if (message->messageType == "addLevelGameScript") {
+
+			GameScript *dynamicGameScript = new GameScript();
+			dynamicGameScript->createFromFile(message->messageContents[0].data[0]);
+			addMessagingComponent(dynamicGameScript, true);
+		}
+		else if (message->messageType == "editGameData") {
+			dynamic_cast<GameScript*>(m_messagingComponents[message->senderID])->setGameData(message->messageContents[0]);
+		} else if (message->messageType == "launchScript") {
+			auto pyFunc = makePythonFunction(message->messageContents[0].data[0], message->messageContents[0].data[0]);
+			MessageData* tempMessageData = new MessageData(*message);
+			tempMessageData->messageContents.erase(tempMessageData->messageContents.begin());
+			tempMessageData->senderID = size_t(numeric_limits<size_t>::max);
+			tempMessageData->intendedReceiverID = size_t(numeric_limits<size_t>::max);
+			addMessage(new MessageData(tempMessageData->processPythonFunc(pyFunc, size_t(numeric_limits<size_t>::max), getEntryIDs(), "")));
 		}
 		else {
 			m_messageQueue.push(message);

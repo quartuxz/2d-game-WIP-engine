@@ -70,7 +70,7 @@ class decomposedData:
 
 
 def makeDDataMessage(messageType, senderID, intendedReceiverID, *DData):
-    retDDataMessage = decomposedData_python.decomposedData()
+    retDDataMessage = decomposedData()
     retDDataMessage.data.append(messageType)
     retDDataMessage.data.append(str(senderID))
     retDDataMessage.data.append(str(intendedReceiverID))

@@ -12,48 +12,6 @@
 
 
 
-boost::python::object makePythonFunction(std::string scriptName, std::string functionName) {
-	try
-	{
-		boost::python::str tempStr(scriptName);
-		boost::python::object retObj = boost::python::import(tempStr).attr(boost::python::str(functionName));
-		return retObj;
-	}
-	catch (const boost::python::error_already_set&)
-	{
-		PyErr_Print();
-		while (true) {
-			PyErr_Print();
-		}
-		return boost::python::object();
-	}
-}
-
-void GameScript::pv_processMessage(const MessageData& tempMessage, MessageBus* bus) {
-
-	bus->addMessage(new MessageData(tempMessage.processPythonFunc(m_pythonFunc, p_uniqueID, bus->getEntryIDs(), m_cachedSerializedGameData)));
-}
-
-void GameScript::createFromFile(std::string scriptName)
-{
-	m_pythonFunc = makePythonFunction(scriptName, "gameScript");
-	m_gameData.type = "gameData";
-	m_gameData.name = "scriptGameData";
-	m_cachedSerializedGameData = m_gameData.serialize();
-	//boost::python::object memoryBlockNameRetriever = makePythonFunction("shared_data", "generateMemoryBlock")(1000);
-	//boost::python::object retObj = makePythonFunction("shared_data", "generateMemoryBlock")(10);
-	//m_sharedMemoryBlockName = boost::python::extract<std::string>(retObj[0]);
-}
-
-decomposedData GameScript::getGameData()const {
-	return m_gameData;
-}
-
-void GameScript::setGameData(decomposedData DData){
-	m_gameData = DData;
-	m_cachedSerializedGameData = m_gameData.serialize();
-
-}
 
 void HUDMenu::createStaticMenuLayout()
 {
@@ -140,6 +98,7 @@ void GameMain::m_loadLevelGameMainBits(std::string fileName) {
 					tempMarketMenu->createStaticMenuLayout();
 					m_currentLevel->addInteractable(tempMarketMenu, sf::Vector2f(std::atof(tokens[2].c_str()), std::atof(tokens[3].c_str())));
 				}
+
 			}
 			if (tokens[0] == "gameScript") {
 				GameScript* tempMC = new GameScript();
@@ -311,6 +270,7 @@ void GameMain::setProgressionFile(std::string fileName)
 
 void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * bus) {
 	//std::cout << tempMessage.messageContents[0].name << std::endl;
+
 	if (tempMessage.messageType == "editNamedWall") {
 		Map* currentLevelmap = m_currentLevel->getMap();
 		currentLevelmap->getWalls()->operator[](currentLevelmap->getWallNames()[tempMessage.messageContents[0].data[0]]).isActive = ma_deserialize_uint(tempMessage.messageContents[0].data[1]);
@@ -321,17 +281,8 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 			sf::Vector2f(ma_deserialize_float(tempMessage.messageContents[0].data[2]), ma_deserialize_float(tempMessage.messageContents[0].data[3])),
 			tempMessage.messageContents[0].data[0]);
 	}
-	else if (tempMessage.messageType == "launchScript") {
-		auto pyFunc = makePythonFunction(tempMessage.messageContents[0].data[0], tempMessage.messageContents[0].data[0]);
-		MessageData* tempMessageData = new MessageData(tempMessage);
-		tempMessageData->messageContents.erase(tempMessageData->messageContents.begin());
-		tempMessageData->senderID = p_uniqueID;
-		tempMessageData->intendedReceiverID = size_t(numeric_limits<size_t>::max);
-		bus->addMessage(new MessageData(tempMessageData->processPythonFunc(pyFunc, size_t(numeric_limits<size_t>::max), bus->getEntryIDs(), "")));
-	}
-	else if (tempMessage.messageType == "editGameData") {
-		dynamic_cast<GameScript*>(m_gameBus.getMessagingComponent(tempMessage.senderID))->setGameData(tempMessage.messageContents[0]);
-	}
+
+
 	else if (tempMessage.messageType == "editUniqueSprites") {
 		auto tempAnimatorSprites = Animator::getInstance().getUnqiueAnimatorSprites();
 		auto mapItr = tempAnimatorSprites->find(tempMessage.messageContents[0].data[0]);
@@ -501,6 +452,7 @@ void GameMain::gameLoop()
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
 			//std::cout << "gearPickedUP!" << std::endl;
+			
 			m_currentLevel->pickUpGear();
 		}
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
@@ -540,12 +492,18 @@ void GameMain::gameLoop()
 		sf::Event event;
 		while (m_window.pollEvent(event))
 		{
-
+			
 			if (event.type == sf::Event::Closed)
 				m_window.close();
 			if (event.type == sf::Event::KeyPressed) {
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
 					//std::cout << "gearPickedUP!" << std::endl;
+					MessageData* playerData = new MessageData();
+					playerData->messageType = "interactionKeyPressed";
+					playerData->messageContents.push_back(decomposedData().setName("playerPosition").setType("sf::Vector2f").addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.x)).addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.y)));
+					//playerData->messageContents.push_back();
+					m_gameBus.addMessage(playerData);
+
 					m_currentLevel->pickUpGear();
 				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 					if (m_activeMenu != "mainMenu") {

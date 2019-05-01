@@ -95,13 +95,15 @@ void ToolTip::makeTooltipForGear(GearPiece gearPiece)
 
 void ToolTip::draw(sf::RenderWindow &window)
 {
-	float initialScale = m_backgroundImage.scale;
-	sf::Vector2f initialPosition = m_backgroundImage.position;
-	m_backgroundImage.scale *= m_scale;
-	m_backgroundImage.position += m_position;
-	Animator::getInstance().instantDraw(m_backgroundImage);
-	m_backgroundImage.position = initialPosition;
-	m_backgroundImage.scale = initialScale;
+	if (m_backgroundImage.isActive) {
+		float initialScale = m_backgroundImage.scale;
+		sf::Vector2f initialPosition = m_backgroundImage.position;
+		m_backgroundImage.scale *= m_scale;
+		m_backgroundImage.position += m_position;
+		Animator::getInstance().instantDraw(m_backgroundImage);
+		m_backgroundImage.position = initialPosition;
+		m_backgroundImage.scale = initialScale;
+	}
 	for (size_t i = 0; i < m_text.size(); i++)
 	{
 		m_text[i].scale(sf::Vector2f(m_scale, m_scale));

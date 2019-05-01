@@ -758,7 +758,7 @@ void UnitManager::createFromFile(std::string fileName)
 						//((rand() % (displacementScale * 10)) / displacementScale) * ((rand() % 2) ? -1 : 1)
 						const float microDisplacementX = (rand()%enemies);
 						const float microDisplacementY = (rand() % enemies);
-						m_AIs[o]->getUnit()->move(sf::Vector2f(std::atof(tokens[2].c_str())+microDisplacementX,std::atof(tokens[3].c_str())+ microDisplacementY));
+						m_AIs[o]->getUnit()->move(sf::Vector2f((std::atof(tokens[2].c_str())*m_levelScale)+microDisplacementX,(std::atof(tokens[3].c_str())*m_levelScale)+ microDisplacementY));
 						for (size_t p = 0; p < m_AIs.size(); p++) {
 							m_AIs[o]->getUnit()->collideOne(m_AIs[p]->getUnit());
 						}
@@ -783,7 +783,7 @@ void UnitManager::createFromFile(std::string fileName)
 			if (tokens[0] == "unit") {
 				EnemyAI *tempAI = new EnemyAI();
                 std::vector<std::pair<sf::Vector2f, float>> unitBody;
-				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())), std::atof(tokens[3].c_str())));
+				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str()))*m_levelScale, std::atof(tokens[3].c_str())));
 				unit *tempUnit = new unit(unitBody);
 				tempUnit->typeOfUnit = defaultType;
 				tempUnit->setWeight(std::atof(tokens[4].c_str()));
@@ -807,17 +807,29 @@ void UnitManager::createFromFile(std::string fileName)
 			else if (tokens[0] == "tooltip") {
 				ToolTip *toolTip = new ToolTip();
 				AnimatorSprite tempASprite;
-				tempASprite.textureID = Animator::getInstance().getTextureID(tokens[1]);
+				if (tokens[1] == "") {
+					tempASprite.isActive = false;
+				}
+				else {
+					tempASprite.textureID = Animator::getInstance().getTextureID(tokens[1]);
+				}
+				
 				toolTip->setTexture(tempASprite);
-				toolTip->setPosition(sf::Vector2f(std::atof(tokens[2].c_str()), std::atof(tokens[3].c_str())));
+				toolTip->setPosition(sf::Vector2f(std::atof(tokens[2].c_str())*m_levelScale, std::atof(tokens[3].c_str())*m_levelScale));
 				toolTip->setScale(std::atof(tokens[4].c_str()));
+				sf::Text tempTooltipText;
+				tempTooltipText.setFont(*ToolTip::getFont());
+				tempTooltipText.setString(tokens[5]);
+				tempTooltipText.setScale(sf::Vector2f(0.1,0.1));
+				tempTooltipText.setFillColor(sf::Color::Green);
+				toolTip->addText(tempTooltipText);
 				addToolTip(toolTip);
 
 			}
 			else
 			if (tokens[0] == "player") {
 				std::vector<std::pair<sf::Vector2f, float>> unitBody;
-				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())), std::atof(tokens[3].c_str())));
+				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str())*m_levelScale), std::atof(tokens[3].c_str())));
 				m_player = new unit(unitBody);
 				m_player->typeOfUnit = playerType;
 				m_player->setWeight(std::atof(tokens[4].c_str()));
@@ -1011,7 +1023,7 @@ void UnitManager::createFromFile(std::string fileName)
 			if (tokens[0] == "gearPiece") {
 
 				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				placeGearOnMap(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())), tempGearPiece);
+				placeGearOnMap(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str())* m_levelScale), tempGearPiece);
 			}else
 			if (tokens[0] == "texture") {
 				sf::Texture *tempTexture = new sf::Texture();

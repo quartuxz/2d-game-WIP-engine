@@ -13,18 +13,7 @@
 
 
 
-class GameScript : public MessagingComponent {
-private:
-	boost::python::object m_pythonFunc;
-	decomposedData m_gameData;
-	std::string m_cachedSerializedGameData;
-protected:
-	void pv_processMessage(const MessageData&, MessageBus*)override;
-public:
-	void createFromFile(std::string);
-	decomposedData getGameData()const;
-	void setGameData(decomposedData);
-};
+
 
 class HUDMenu : public Menu {
 private:
