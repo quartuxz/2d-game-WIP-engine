@@ -1,3 +1,3 @@
 # 2d-game-WIP-engine
 A small-ish 2d game and engine
-For an ARPG isometric game
+For a heavily moddable ARPG isometric game
