@@ -3,6 +3,7 @@
 #include <boost/python.hpp>
 #include <cstdlib>
 #include <fstream>
+#include "Serializable.h"
 
 Animator::~Animator()
 {
@@ -47,35 +48,48 @@ void Animator::loadTexturesFromFile(std::string fileName) {
 			if (tokens[0] == "texture") {
 				addTexture(tokens[1]);
 			}
+			else if(tokens[0] == "texturesheet"){
+				sf::Texture *tempTex = new sf::Texture();
+				tempTex->loadFromFile(tokens[1], sf::IntRect(std::atoi(tokens[2].c_str()), std::atoi(tokens[3].c_str()), std::atoi(tokens[4].c_str()), std::atoi(tokens[5].c_str())));
+				m_addRawTexture(tempTex, tokens[6]);
+			}
+			else if (tokens[0] == "loadAnimation") {
+				std::queue<AnimatorSprite> tempAnimation;
+				for (size_t i = 2; i < tokens.size(); i+=2)
+				{
+					AnimatorSprite tempASprite;
+					tempASprite.scale = 2;
+					tempASprite.textureID = getTextureID(tokens[i]);
+					tempASprite.timeDisplayed = ma_deserialize_float(tokens[i + 1]);
+					tempAnimation.push(tempASprite);
+				}
+				addAnimationPreset(tempAnimation, tokens[1]);
+			}
 
 		}
 		fileRead.close();
 	}
 }
 
-std::queue<AnimatorSprite> Animator::m_updateAnimRecursive(std::queue<AnimatorSprite> animation, float timeDelta, AnimatorSprite offset)
+std::queue<AnimatorSprite> Animator::m_updateAnimRecursive(std::queue<AnimatorSprite> animation, float timeDelta, AnimatorSprite *output)
 {
 
 	AnimatorSprite tempASprite = animation.front();
 
 	if (tempASprite.timeDisplayed > tempASprite.timeElapsed && tempASprite.isActive) {
-		AnimatorSprite lastTempSprite;
-		if (offset.offsets) {
-			lastTempSprite = tempASprite;
-			tempASprite.position = offset.position;
-			tempASprite.rotation = offset.rotation;
-		}
-		addOneFrameSprite(tempASprite);
-		if (offset.offsets) {
-			tempASprite = lastTempSprite;
-		}
+		//addOneFrameSprite(tempASprite);
 		tempASprite.timeElapsed += timeDelta;
 		animation.front() = tempASprite;
+		*output = tempASprite;
 	}
 	else {
 		animation.pop();
-		animation = m_updateAnimRecursive(animation, tempASprite.timeElapsed- tempASprite.timeDisplayed);
+		if (!animation.empty()) {
+			animation = m_updateAnimRecursive(animation, tempASprite.timeElapsed - tempASprite.timeDisplayed, output);
+		}
 	}
+
+
 
 	return animation;
 }
@@ -94,6 +108,16 @@ sf::Sprite Animator::m_getSprite(AnimatorSprite aSprite)
 	return tempSprite;
 }
 
+unsigned int Animator::m_addRawTexture(sf::Texture *tempTex, std::string fileName)
+{
+	m_allLock.lock();
+	m_fileIDs[fileName] = m_TextureIDCounter;
+	m_fileNames[m_TextureIDCounter] = fileName;
+	m_textures[m_TextureIDCounter++] = tempTex;
+	m_allLock.unlock();
+	return (m_TextureIDCounter - 1);
+}
+
 void Animator::clearTextures()
 {
 	m_textures.clear();
@@ -109,16 +133,31 @@ sf::Texture* Animator::getTexture(unsigned int ID)
 	return m_textures[ID];
 }
 
+void Animator::eraseInactiveAnimatorPresets()
+{
+	m_allLock.lock();
+	std::list<std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>>::iterator it = m_animations.begin();
+	while (it != m_animations.end())
+	{
+		if (!it->second->isActive) {
+			m_animations.erase(it++);
+		}
+		else {
+			++it;
+		}
+		
+	}
+	m_allLock.unlock();
+}
+
 unsigned int Animator::addTexture(std::string fileName)
 {
 	m_allLock.lock();
 	sf::Texture *tempTex = new sf::Texture();
 	tempTex->loadFromFile(fileName);
-	m_fileIDs[fileName] = m_TextureIDCounter;
-	m_fileNames[m_TextureIDCounter] = fileName;
-	m_textures[m_TextureIDCounter++] = tempTex;
+	unsigned int retVal = m_addRawTexture(tempTex, fileName);
 	m_allLock.unlock();
-	return (m_TextureIDCounter-1);
+	return retVal;
 }
 
 void Animator::addOneFrameSprite(const AnimatorSprite &aSprite)
@@ -159,11 +198,11 @@ void Animator::update(float timeDelta)
 	while (it != m_animations.end())
 	{
 		if (it->first.empty()) {
-			delete it->second;
+			it->second->isActive = false;
 			m_animations.erase(it++);
 		}
 		else {
-			it->first = m_updateAnimRecursive(it->first, timeDelta, *it->second);
+			it->first = m_updateAnimRecursive(it->first, timeDelta, it->second);
 			++it;
 		}
 	}
@@ -196,25 +235,42 @@ sf::FloatRect Animator::getTextureLocalBounds(unsigned int textureID)
 	return tempSprite.getLocalBounds();
 }
 
-AnimatorSprite* Animator::playAnimation(std::queue<AnimatorSprite> animation)
+void Animator::playAnimation(std::queue<AnimatorSprite> animation, AnimatorSprite *controller)
 {
 	m_allLock.lock();
-	AnimatorSprite *controller = new AnimatorSprite(animation.front());
 	controller->offsets = true;
+	controller->isActive = true;
 	m_animations.push_back(std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>(animation, controller));
 	m_allLock.unlock();
-	return controller;
 }
 
-AnimatorSprite* Animator::playAnimation(unsigned int animationPresetID)
+void Animator::playAnimation(unsigned int animationPresetID, AnimatorSprite *controller)
 {
-	return playAnimation(m_animationPresets[animationPresetID]);
+	return playAnimation(m_animationPresets[animationPresetID], controller);
 }
 
-unsigned int Animator::addAnimationPreset(std::queue<AnimatorSprite> animationPreset)
+std::queue<AnimatorSprite> Animator::getAnimationPreset(unsigned int animationPresetID)
+{
+	return m_animationPresets[animationPresetID];
+}
+
+AnimatorSprite* Animator::playAndGetAnimationState(unsigned int animationPresetID)
+{
+	AnimatorSprite *retASprite = new AnimatorSprite();
+	m_simpleAnimations.push_back(std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>(getAnimationPreset(animationPresetID), retASprite));
+	return retASprite;
+}
+
+unsigned int Animator::getAnimationPresetID(std::string animationName)
+{
+	return m_namedAnimations[animationName];
+}
+
+unsigned int Animator::addAnimationPreset(std::queue<AnimatorSprite> animationPreset, std::string animationName)
 {
 	m_allLock.lock();
-	m_animationPresets[m_animationPresetIDCounter++] = animationPreset;
+	m_animationPresets[m_animationPresetIDCounter] = animationPreset;
+	m_namedAnimations[animationName] = m_animationPresetIDCounter++;
 	m_allLock.unlock();
 	return m_animationPresetIDCounter;
 }

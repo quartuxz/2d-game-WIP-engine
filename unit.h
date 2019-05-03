@@ -21,6 +21,34 @@ sf::Vector2f getUnitVec(sf::Vector2f, sf::Vector2f);
 
 enum unitType {
 	playerType, bulletType, defaultType
+};  
+
+enum lookDirection {
+	back_left,back_right,front_left,front_right
+};
+
+struct unitAnimatorValues {
+
+	bool usingCompositeTextures = false;
+
+	AnimatorSprite back_left_idle;
+	AnimatorSprite back_right_idle;
+	AnimatorSprite front_left_idle;
+	AnimatorSprite front_right_idle;
+
+	AnimatorSprite m_getIdleASprite(lookDirection);
+
+	bool hasWalking = false;
+	unsigned int back_left_walking;
+	unsigned int back_right_walking;
+	unsigned int front_left_walking;
+	unsigned int front_right_walking;
+
+	bool hasRunning = false;
+	unsigned int back_left_running;
+	unsigned int back_right_running;
+	unsigned int front_left_running;
+	unsigned int front_right_running;
 };
 
 class unit
@@ -36,6 +64,7 @@ private:
 
 	float lastTime = 0;
 
+	AnimatorSprite lastAnimatorSprite;
 	AnimatorSprite animatorSprite;
 
 	sf::Vector2f currentPos;
@@ -46,18 +75,24 @@ private:
 
 	int ID;
 
-	AnimatorSprite *animationConroller = nullptr;
+	AnimatorSprite *animationController = new AnimatorSprite();
 
 	
 	void m_collide(std::vector<unit*>);
 
+	lookDirection lastLookDir;
+
+
+
+	void m_resetAnimationController();
+
+	AnimatorSprite m_getAnimatorSpriteHelper(lookDirection);
 
 public:
 	static int ownedByIDTracker;
 
-	unsigned int walkingAnimation;
 
-	bool usingCompositeTextures = false;
+	unitAnimatorValues animatorValues;
 
 	//idle textures
 	AnimatorSprite back_left_idle;

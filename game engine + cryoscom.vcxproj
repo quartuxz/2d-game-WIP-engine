@@ -24,9 +24,11 @@
     <ClCompile Include="AttackAndDefence.cpp" />
     <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="EnemyAI.cpp" />
+    <ClCompile Include="fileLoader.cpp" />
     <ClCompile Include="GameMain.cpp" />
     <ClCompile Include="Gear.cpp" />
     <ClCompile Include="globalMutexes.cpp" />
+    <ClCompile Include="LevelMaker.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Map.cpp" />
@@ -49,9 +51,11 @@
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="cryoscom_defsAndUtils.h" />
     <ClInclude Include="EnemyAI.h" />
+    <ClInclude Include="fileLoader.h" />
     <ClInclude Include="GameMain.h" />
     <ClInclude Include="Gear.h" />
     <ClInclude Include="globalMutexes.h" />
+    <ClInclude Include="LevelMaker.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Menu.h" />
@@ -71,8 +75,10 @@
     <Image Include="bullet.png" />
     <Image Include="button.png" />
     <Image Include="chestpiece.png" />
+    <Image Include="cryo_area_1.png" />
     <Image Include="Cryo_area_2_WIP.png" />
     <Image Include="enemyAI.png" />
+    <Image Include="EngieNWwalkANIM.png" />
     <Image Include="level1.png" />
     <Image Include="level1_v2.png" />
     <Image Include="mapTex.png" />
@@ -98,6 +104,8 @@
   <ItemGroup>
     <Text Include="enemy_test.txt" />
     <Text Include="initial_progression.txt" />
+    <Text Include="large_map.txt" />
+    <Text Include="loaded_textures.txt" />
     <Text Include="lootTable1.txt" />
     <Text Include="mainMenu.txt" />
     <Text Include="mainUI.txt" />

@@ -12,6 +12,7 @@ int unit::ownedByIDTracker = 0;
 unit::unit(std::vector<std::pair<sf::Vector2f, float>> m_body)
 {
 	static int IDCounter = 0;
+	animationController->isActive = false;
 	body = m_body;
 	//texture.setRadius(m_body[0].second);
 	//texture.setOrigin(sf::Vector2f(m_body[0].second, m_body[0].second));
@@ -74,12 +75,12 @@ void unit::applyForce(sf::Vector2f force)
 
 AnimatorSprite * unit::getAnimationController() const
 {
-	return animationConroller;
+	return animationController;
 }
 
 void unit::setAnimationController(AnimatorSprite *aSprite)
 {
-	animationConroller = aSprite;
+	animationController = aSprite;
 }
 
 bool unit::isMoving(float threshHold) const
@@ -89,29 +90,53 @@ bool unit::isMoving(float threshHold) const
 
 AnimatorSprite unit::getAnimatorSprite()
 {
+	bool defaultedToLast = false;
 	AnimatorSprite retVal;
 	retVal = animatorSprite;
 	retVal.position = body[0].first;
-	if (usingCompositeTextures) {
+	if (animatorValues.usingCompositeTextures) {
 
-	
-		if (velocity.x <= 0 && velocity.y <= 0) {
-			retVal = back_left_idle;
+		if (!isMoving()) {
+			retVal = animatorValues.m_getIdleASprite(lastLookDir);
+			m_resetAnimationController();
+			defaultedToLast = true;
 		}
-		else if (velocity.x > 0 && velocity.y <= 0) {
-			retVal = back_right_idle;
+		else if (velocity.x < 0 && velocity.y < 0) {
+			retVal = m_getAnimatorSpriteHelper(back_left);
+			//retVal = animatorValues.back_left_idle;
+			
+			
 		}
-		else if (velocity.x <= 0 && velocity.y > 0) {
-			retVal = front_left_idle;
+		else if (velocity.x > 0 && velocity.y < 0) {
+			retVal = m_getAnimatorSpriteHelper(back_right);
+			//retVal = animatorValues.back_right_idle;
+		}
+		else if (velocity.x < 0 && velocity.y > 0) {
+			retVal = m_getAnimatorSpriteHelper(front_left);
+			//retVal = animatorValues.front_left_idle;
 		}
 		else{
-			retVal = front_right_idle;
+
+			retVal = m_getAnimatorSpriteHelper(front_right);
+
+			//retVal = animatorValues.front_right_idle;
+			//lastAnimatorSprite = animatorValues.front_right_idle;
+			//if (!animationController->isActive) {
+			//	retVal = animatorValues.front_right_idle;
+			//	Animator::getInstance().playAnimation(Animator::getInstance().getAnimationPresetID("player_north_west_walking"), animationController);
+			//}
+			//else {
+			//	retVal = *animationController;
+			//}
 		}
 		retVal.scale = body[0].second / ((Animator::getInstance().getTexture(retVal.textureID)->getSize().y + Animator::getInstance().getTexture(retVal.textureID)->getSize().x) / 4);
 		retVal.position = body[0].first;
 		retVal.position.y -= body[0].second * 0.5;
 	}
 	
+	if (!defaultedToLast) {
+		lastAnimatorSprite = retVal;
+	}
 
 	return retVal;
 }
@@ -196,6 +221,59 @@ void unit::m_collide(std::vector<unit*> colliders) {
 
 }
 
+void unit::m_resetAnimationController()
+{
+	animationController->isActive = false;
+	Animator::getInstance().eraseInactiveAnimatorPresets();
+	delete animationController;
+	animationController = new AnimatorSprite();
+	animationController->isActive = false;
+}
+
+AnimatorSprite unit::m_getAnimatorSpriteHelper(lookDirection lDir)
+{
+	AnimatorSprite* defaultIdleASprite = &animatorValues.front_right_idle;
+	unsigned int animationPresetID = 0;
+
+	if (lastLookDir != lDir) {
+		m_resetAnimationController();
+	}
+
+	switch (lDir)
+	{
+	case back_left:
+		defaultIdleASprite = &animatorValues.back_left_idle;
+		animationPresetID = animatorValues.back_left_walking;
+		break;
+	case back_right:
+		defaultIdleASprite = &animatorValues.back_right_idle;
+		animationPresetID = animatorValues.back_right_walking;
+		break;
+	case front_left:
+		defaultIdleASprite = &animatorValues.front_left_idle;
+		animationPresetID = animatorValues.front_left_walking;
+		break;
+	case front_right:
+		defaultIdleASprite = &animatorValues.front_right_idle;
+		animationPresetID = animatorValues.front_right_walking;
+		break;
+	}
+	AnimatorSprite retVal;
+	lastAnimatorSprite = *defaultIdleASprite;
+	if (!animatorValues.hasWalking) {
+		return *defaultIdleASprite;
+	}
+	if (!animationController->isActive) {
+		retVal = *defaultIdleASprite;
+		Animator::getInstance().playAnimation(animationPresetID, animationController);
+	}
+	else {
+		retVal = *animationController;
+	}
+	lastLookDir = lDir;
+	return retVal;
+}
+
 void unit::update(float seconds, std::vector<unit*> colliders)
 {
 
@@ -251,9 +329,9 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 		animatorSprite.rotation = getAngleInDegrees(getUnitVec(sf::Vector2f(0, 0), velocity*seconds));
 	}
 
-	if (animationConroller != nullptr) {
-		animationConroller->position = body[0].first;
-		animationConroller->rotation = animatorSprite.rotation;
+	if (animationController != nullptr) {
+		//animationController->position = body[0].first;
+		//animationController->rotation = animatorSprite.rotation;
 	}
 
 
@@ -324,6 +402,7 @@ float unit::collides(const unit &collider, sf::Vector2f *evadePos)
 
 unit::~unit()
 {
+	delete animationController;
 	delete Amodule;
 	delete Dmodule;
 }
@@ -364,4 +443,25 @@ sf::Vector2f getUnitVec(sf::Vector2f pos1, sf::Vector2f pos2)
 float distance(sf::Vector2f v, sf::Vector2f w)
 {
 	return std::sqrt(pow(v.x - w.x, 2) + pow(v.y - w.y, 2));
+}
+
+AnimatorSprite unitAnimatorValues::m_getIdleASprite(lookDirection lDir)
+{
+	switch (lDir)
+	{
+	case back_left:
+		return back_left_idle;
+		break;
+	case back_right:
+		return back_right_idle;
+		break;
+	case front_left:
+		return front_left_idle;
+		break;
+	case front_right:
+		return front_right_idle;
+		break;
+	default:
+		break;
+	}
 }

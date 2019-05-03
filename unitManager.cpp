@@ -839,15 +839,20 @@ void UnitManager::createFromFile(std::string fileName)
 
 					m_player->setAnimatorSprite(tempASprtie);
 				}
-				m_player->back_left_idle.textureID = Animator::getInstance().getTextureID("player_back_left_idle.png");
-				m_player->back_left_idle.drawLayer = 2;
-				m_player->back_right_idle.textureID = Animator::getInstance().getTextureID("player_back_right_idle.png");
-				m_player->back_right_idle.drawLayer = 2;
-				m_player->front_left_idle.textureID = Animator::getInstance().getTextureID("player_front_left_idle.png");
-				m_player->front_left_idle.drawLayer = 2;
-				m_player->front_right_idle.textureID = Animator::getInstance().getTextureID("player_front_right_idle.png");
-				m_player->front_right_idle.drawLayer = 2;
-				m_player->usingCompositeTextures = true;
+				m_player->animatorValues.back_left_idle.textureID = Animator::getInstance().getTextureID("player_back_left_idle.png");
+				m_player->animatorValues.back_left_idle.drawLayer = 2;
+				m_player->animatorValues.back_right_idle.textureID = Animator::getInstance().getTextureID("player_back_right_idle.png");
+				m_player->animatorValues.back_right_idle.drawLayer = 2;
+				m_player->animatorValues.front_left_idle.textureID = Animator::getInstance().getTextureID("player_front_left_idle.png");
+				m_player->animatorValues.front_left_idle.drawLayer = 2;
+				m_player->animatorValues.front_right_idle.textureID = Animator::getInstance().getTextureID("player_front_right_idle.png");
+				m_player->animatorValues.front_right_idle.drawLayer = 2;
+				m_player->animatorValues.front_right_walking = Animator::getInstance().getAnimationPresetID("player_front_right_walk");
+				m_player->animatorValues.front_left_walking = Animator::getInstance().getAnimationPresetID("player_front_left_walk");
+				m_player->animatorValues.back_right_walking = Animator::getInstance().getAnimationPresetID("player_back_right_walk");
+				m_player->animatorValues.back_left_walking = Animator::getInstance().getAnimationPresetID("player_back_left_walk");
+				m_player->animatorValues.usingCompositeTextures = true;
+				m_player->animatorValues.hasWalking = true;
 
 			}else
 			if (tokens[0] == "bulletTexture") {
@@ -1025,73 +1030,6 @@ void UnitManager::createFromFile(std::string fileName)
 				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
 				placeGearOnMap(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str())* m_levelScale), tempGearPiece);
 			}else
-			if (tokens[0] == "texture") {
-				sf::Texture *tempTexture = new sf::Texture();
-				tempTexture->loadFromFile(tokens[3]);
-				m_toDeleteTextures.push_back(tempTexture);
-				sf::Sprite tempSprite;
-				tempSprite.setTexture(*tempTexture);
-				//if the 3rd value equals 0 then set the textures for the units themselves
-				if (std::atoi(tokens[2].c_str()) == 0) {
-					if (std::atoi(tokens[1].c_str()) == -1) {
-						m_player->setTexture(tempSprite, true);
-					}
-					else {
-						m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->getUnit()->setTexture(tempSprite,true);
-					}
-				}
-				//else, set them for the bullets
-				else{
-
-					if (std::atoi(tokens[1].c_str()) == -1) {
-						m_playerWeapon->setBulletTex(tempSprite);
-					}
-					else {
-						m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->getWeapon()->setBulletTex(tempSprite);;
-					}
-				}
-
-				for (size_t i = 4; i < tokens.size(); i++)
-				{
-					std::vector<std::string> behaviour;
-
-					std::string delimiter = ",";
-
-					size_t pos = 0;
-					pos = tokens[i].find(delimiter);
-					while (pos != std::string::npos) {
-						behaviour.push_back(tokens[i].substr(0, pos));
-						tokens[i].erase(0, pos + delimiter.length());
-						pos = tokens[i].find(delimiter);
-					}
-
-					if (behaviour[0] == "addList") {
-						for (size_t i = 1; i < behaviour.size(); i++)
-						{
-							if (std::atoi(tokens[2].c_str()) == 0) {
-								if (std::atoi(behaviour[i].c_str()) == -1) {
-									m_player->setTexture(tempSprite, true);
-								}
-								else {
-									m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->getUnit()->setTexture(tempSprite, true);
-								}
-							}
-							else {
-								if (std::atoi(behaviour[i].c_str()) == -1) {
-									m_playerWeapon->setBulletTex(tempSprite);
-								}
-								else {
-									m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->getWeapon()->setBulletTex(tempSprite);;
-								}
-							}
-
-						}
-					}
-				}
-
-
-
-			}else
 			if (tokens[0] == "worldTextureTile") {
 				sf::Texture *tempTexture = new sf::Texture();
 				tempTexture->loadFromFile(tokens[7]);
@@ -1109,9 +1047,6 @@ void UnitManager::createFromFile(std::string fileName)
 				tempSprite.setRotation(std::atof(tokens[5].c_str()));
 				tempSprite.scale(std::atof(tokens[6].c_str())*m_levelScale, std::atof(tokens[6].c_str())*m_levelScale);
 				m_worldTextures.push_back(tempSprite);
-			}
-			else if (tokens[0] == "animatorTexture") {
-				Animator::getInstance().addTexture(tokens[1]);
 			}
 			else if (tokens[0] == "loadLootTable") {
 				loadLootTable(tokens[1]);

@@ -13,7 +13,9 @@
 #include "GameMain.h"
 #include <stdlib.h>
 #include "Serializable.h"
-
+#include "Animator.h"
+#include "cryoscom_defsAndUtils.h"
+#include "LevelMaker.h"
 
 //messaging test
 #include "MessageBus.h"
@@ -195,8 +197,14 @@ int main()
 
     //python test
 
-	GameMain gameMain("master.txt");
+#if MAKING_LEVELS
+    LevelMaker levelMaker;
+	levelMaker.levelMakerLoop("newFile.txt", "cryo_area_1.png");
+	return 0;
+#endif
 
+	GameMain gameMain("master.txt");
+	Animator::getInstance().loadTexturesFromFile("loaded_textures.txt");
 	gameMain.spawnWindow();
 	gameMain.createUIFromFile("mainUI.txt");
 	gameMain.setProgressionFile("progression.txt");

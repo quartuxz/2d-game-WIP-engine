@@ -1,15 +1,6 @@
 scaleFactor;3;
 worldTextureTile;0;0;0;0;0;1;Cryo_area_2_WIP.png;
-animatorTexture;player.png;
-animatorTexture;enemyAI.png;
-animatorTexture;bullet.png;
-animatorTexture;tooltip.png;
-animatorTexture;chestpiece.png;
 
-animatorTexture;player_back_left_idle.png;
-animatorTexture;player_back_right_idle.png;
-animatorTexture;player_front_left_idle.png;
-animatorTexture;player_front_right_idle.png;
 
 loadLootTable;lootTable1.txt;
 //;wall;224;0;0;0;

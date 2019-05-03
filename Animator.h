@@ -46,6 +46,8 @@ private:
 	//the sixth the time elapsed since the texture was first displayed.
 	//if(the second < the sixth) then the animation should pass to the next frame.
 	std::list<std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>> m_animations;
+
+	std::list<std::pair<std::queue<AnimatorSprite>, AnimatorSprite*>> m_simpleAnimations;
 	//member description
 
 	std::list<AnimatorSprite> m_decals;
@@ -56,11 +58,15 @@ private:
 	std::map<unsigned int, std::string> m_fileNames;
 
 	//updates the passed animation, discarding any expired frames and the displaying the next non-expired frame; returns the new animation at the according time advancement
-	std::queue<AnimatorSprite> m_updateAnimRecursive(std::queue<AnimatorSprite>, float, AnimatorSprite offset = AnimatorSprite::create(false));
+	std::queue<AnimatorSprite> m_updateAnimRecursive(std::queue<AnimatorSprite>, float, AnimatorSprite *);
 
 	unsigned int m_TextureIDCounter = 0;
 
 	sf::Sprite m_getSprite(AnimatorSprite);
+
+	std::map<std::string, unsigned int> m_namedAnimations;
+
+	unsigned int m_addRawTexture(sf::Texture*, std::string);
 
 	std::recursive_mutex m_allLock;
 	//MockMutex m_allLock;
@@ -76,6 +82,7 @@ public:
 
 	sf::Texture* getTexture(unsigned int);
 
+	void eraseInactiveAnimatorPresets();
 
 	void loadTexturesFromFile(std::string);
 	//pass the name of the texture file, returns the unique ID of the texture
@@ -99,15 +106,20 @@ public:
 
 	//master play animation, all other play animation overloads call this
 	//returns 
-	AnimatorSprite* playAnimation(std::queue<AnimatorSprite>);
+	void playAnimation(std::queue<AnimatorSprite>, AnimatorSprite*);
 
 	//plays the selected animationPreset
-	AnimatorSprite* playAnimation(unsigned int);
+	void playAnimation(unsigned int, AnimatorSprite*);
 
+	std::queue<AnimatorSprite> getAnimationPreset(unsigned int);
+	//not working rn
+	AnimatorSprite *playAndGetAnimationState(unsigned int);
+
+	unsigned int getAnimationPresetID(std::string);
 	//pass an animation preset(the texture IDs selected, played for the specified amount time each; on the passed position for all, at the selected layer for all, with the selected scale(should be set to 1 for 1:1 ratio);
 	//the last number should be set to 0(scrolls through the animation))
 	//returns the animation preset unique ID
-	unsigned int addAnimationPreset(std::queue<AnimatorSprite>);
+	unsigned int addAnimationPreset(std::queue<AnimatorSprite>, std::string);
 
 	//draws all curent sprites, with render layer consideration 
 	void draw();

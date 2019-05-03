@@ -84,6 +84,12 @@
     <ClCompile Include="globalMutexes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fileLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LevelMaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="unitManager.h">
@@ -155,6 +161,12 @@
     <ClInclude Include="globalMutexes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="fileLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LevelMaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="bullet.png">
@@ -200,6 +212,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="player_front_right_idle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="EngieNWwalkANIM.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="cryo_area_1.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -261,6 +279,12 @@
     </Text>
     <Text Include="message passing docs.txt">
       <Filter>docs</Filter>
+    </Text>
+    <Text Include="loaded_textures.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="large_map.txt">
+      <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>
 </Project>
