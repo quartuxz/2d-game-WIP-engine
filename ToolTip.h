@@ -9,7 +9,7 @@ class ToolTip
 private:
 	std::vector<sf::Text> m_text;
 
-	static sf::Font m_font;
+	
 
 	AnimatorSprite m_backgroundImage;
 
@@ -25,7 +25,9 @@ public:
 	void setPosition(sf::Vector2f);
 
 	static sf::Font* getFont() {
+		static sf::Font m_font;
 		return &m_font;
+		
 	}
 
 	void setTexture(AnimatorSprite);

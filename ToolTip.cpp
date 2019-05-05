@@ -2,13 +2,11 @@
 #include "Animator.h"
 
 
-sf::Font ToolTip::m_font;
-
 void ToolTip::init(std::string fileName)
 {
 	static bool init = true;
 	if (init) {
-		m_font.loadFromFile(fileName);
+		getFont()->loadFromFile(fileName);
 		init = false;
 	}
 }
@@ -43,7 +41,7 @@ sf::Vector2f ToolTip::getPosition() const
 }
 
 void ToolTip::addText(sf::Text text){
-    text.setFont(m_font);
+    text.setFont(*getFont());
     m_text.push_back(text);
 }
 
@@ -85,7 +83,7 @@ void ToolTip::makeTooltipForGear(GearPiece gearPiece)
 	   << "reload time(s): " << gearPiece.aModule.reloadTime << std::endl
 	   << "gold value: " << gearPiece.goldValue << std::endl;
 	sf::Text tempText;
-	tempText.setFont(m_font);
+	tempText.setFont(*getFont());
 	tempText.setString(ss.str());
 	tempText.setPosition(sf::Vector2f(15,15));
 	tempText.setScale(sf::Vector2f(0.35, 0.35));

@@ -38,7 +38,6 @@ class MessageBus
         //
 
 
-
 		void setUpdateInterval(float);
 
 		void startFrame(float);
@@ -53,9 +52,12 @@ class MessageBus
 
 		MessageBus &operator=(const MessageBus&);
 
+		void onDestroy();
+
         ~MessageBus();
 
     private:
+
 
 		void m_joinThreads();
 

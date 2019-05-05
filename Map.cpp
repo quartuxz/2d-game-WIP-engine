@@ -1,7 +1,7 @@
 #include "Map.h"
 #include <iostream>
 #include "cryoscom_defsAndUtils.h"
-#if CRYOSCOM_DEBUG
+#if CRYOSCOM_DEBUG || MAKING_LEVELS
 	#include "Animator.h"
 #endif // CRYOSCOM_DEBUG
 
@@ -31,7 +31,7 @@ void Map::update(unit *units)
 		if (!walls[o].isActive) {
 			continue;
 		}
-		#if CRYOSCOM_DEBUG
+		#if CRYOSCOM_DEBUG || MAKING_LEVELS
 			sf::VertexArray lines(sf::LinesStrip, 2);
 			lines[0].position = sf::Vector2f(walls[o].wall.first.x, walls[o].wall.first.y);
 			lines[0].color = sf::Color::Magenta;

@@ -1,7 +1,8 @@
 #include "MessageBus.h"
+#include <limits>
 #include "Serializable.h"
 #include "cryoscom_defsAndUtils.h"
-#include <limits>
+#include "globalMutexes.h"
 
 size_t MessageBus::m_IDCounter = 0;
 
@@ -10,8 +11,7 @@ size_t MessageBus::m_IDCounter = 0;
 boost::python::object makePythonFunction(std::string scriptName, std::string functionName) {
 	try
 	{
-		boost::python::str tempStr(scriptName);
-		boost::python::object retObj = boost::python::import(tempStr).attr(boost::python::str(functionName));
+		boost::python::object retObj = boost::python::import(boost::python::str(scriptName)).attr(boost::python::str(functionName));
 		return retObj;
 	}
 	catch (const boost::python::error_already_set&)
@@ -89,6 +89,26 @@ MessageBus &MessageBus::operator=(const MessageBus &rhs) {
 	m_endOfFrameGarbageCollectionQueue = rhs.m_endOfFrameGarbageCollectionQueue;
 	m_messagingComponents = rhs.m_messagingComponents;
 	return *this;
+}
+
+void MessageBus::onDestroy()
+{
+	for (auto const& x : m_dynamicMessagingComponents)
+	{
+		delete x;
+	}
+
+	m_joinThreads();
+
+	while (!m_endOfFrameGarbageCollectionQueue.empty()) {
+		delete m_endOfFrameGarbageCollectionQueue.front();
+		m_endOfFrameGarbageCollectionQueue.pop();
+	}
+
+	while (!m_messageQueue.empty()) {
+		delete m_messageQueue.front();
+		m_messageQueue.pop();
+	}
 }
 
 const std::map<std::string, size_t> &MessageBus::getEntryIDs()const{
@@ -175,6 +195,7 @@ void MessageBus::endFrame() {
 void MessageBus::addMessage(MessageData *message){
 	m_allMutex.lock();
 	if (message->messageType != "NULL") {
+		std::cout << message->messageType << std::endl;
 		if (message->messageType == "messages") {
 			for (size_t i = 0; i < message->messageContents.size(); i++)
 			{
@@ -235,21 +256,7 @@ void MessageBus::notify(){
 
 MessageBus::~MessageBus()
 {
-    for (auto const& x : m_dynamicMessagingComponents)
-    {
-        delete x;
-    }
 
-	m_joinThreads();
-
-	while (!m_endOfFrameGarbageCollectionQueue.empty()) {
-		delete m_endOfFrameGarbageCollectionQueue.front();
-		m_endOfFrameGarbageCollectionQueue.pop();
-	}
-
-    while(!m_messageQueue.empty()){
-        delete m_messageQueue.front();
-        m_messageQueue.pop();
-    }
+	onDestroy();
     //dtor
 }

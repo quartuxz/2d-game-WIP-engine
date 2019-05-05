@@ -16,6 +16,7 @@
 #include "Animator.h"
 #include "cryoscom_defsAndUtils.h"
 #include "LevelMaker.h"
+#include "ToolTip.h"
 
 //messaging test
 #include "MessageBus.h"
@@ -212,6 +213,7 @@ int main()
 	gameMain.onProgramStart();
 	gameMain.gameLoop();
 	gameMain.onProgramEnd();
+	
 	//_CrtDumpMemoryLeaks();
 
 	return 0;

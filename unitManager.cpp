@@ -853,6 +853,7 @@ void UnitManager::createFromFile(std::string fileName)
 				m_player->animatorValues.back_left_walking = Animator::getInstance().getAnimationPresetID("player_back_left_walk");
 				m_player->animatorValues.usingCompositeTextures = true;
 				m_player->animatorValues.hasWalking = true;
+				m_player->animatorValues.hasRunning = false;
 
 			}else
 			if (tokens[0] == "bulletTexture") {

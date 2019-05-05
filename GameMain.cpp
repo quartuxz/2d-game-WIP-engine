@@ -258,8 +258,11 @@ void GameMain::onProgramEnd()
 	mData->messageType = "onProgramEnd";
 	m_gameBus.addMessage(mData);
 	m_gameBus.notify();
+	m_gameBus.onDestroy();
 
 	m_currentLevel->saveGearProgression();
+	Animator::getInstance().draw();
+	m_window.close();
 }
 
 void GameMain::setProgressionFile(std::string fileName)
@@ -343,6 +346,7 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 		tempASprite.position = sf::Vector2f(std::atof(tempMessage.messageContents[0].childrenObjects[0].data[0].c_str()), std::atof(tempMessage.messageContents[0].childrenObjects[0].data[1].c_str()));
 		tempASprite.scale = std::atof(tempMessage.messageContents[0].data[1].c_str());
 		tempASprite.timeDisplayed = std::atof(tempMessage.messageContents[0].data[2].c_str());
+		tempASprite.rotation = std::atof(tempMessage.messageContents[0].data[3].c_str());
 		Animator::getInstance().addDecal(tempASprite);
 	}
 
@@ -388,6 +392,10 @@ void GameMain::gameLoop()
 	sf::Image lastWindowState;
 
 	float lastDash = 0;
+
+	sf::Texture screenShot;
+	screenShot.create(m_window.getSize().x, m_window.getSize().y);
+
 
 	while (m_window.isOpen())
 	{
@@ -507,6 +515,7 @@ void GameMain::gameLoop()
 					m_currentLevel->pickUpGear();
 				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 					if (m_activeMenu != "mainMenu") {
+						screenShot.update(m_window);
 						m_activeMenu = "mainMenu";
 						//lastWindowState = m_window.capture();
 					}
@@ -560,6 +569,10 @@ void GameMain::gameLoop()
 		m_window.clear(sf::Color::White);
 
 		if (m_isPaused) {
+
+			sf::Sprite capturedBackground;
+			capturedBackground.move(m_viewDisplacement);
+			capturedBackground.setTexture(screenShot);
 			sf::Texture tempTexture;
 			tempTexture.loadFromImage(lastWindowState);
 			sf::Sprite tempSprite;
@@ -570,6 +583,7 @@ void GameMain::gameLoop()
 			tempRect.setSize(sf::Vector2f(m_window.getSize()));
 			tempRect.move(m_viewDisplacement);
 			m_window.draw(tempSprite);
+			m_window.draw(capturedBackground);
 			m_window.draw(tempRect);
 		}
 		m_isPaused = runOnce(currentTime.asSeconds(), mousePosition, mouseClick);

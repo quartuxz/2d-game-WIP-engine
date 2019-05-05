@@ -22,6 +22,8 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
 
 
 
+
+
     #shm = shared_memory.SharedMemory(memoryBlockName)
     if messageType == "onProgramEnd":
         #shm.unlink()
@@ -48,7 +50,7 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
     retDData.childrenObjects.append(tempChildren)
     retDData.data.append("2") #this is the scale of the image
     retDData.data.append("3") #this is how much time the image is displayed for
-    #retDData.data.append("10") #this is how much time the image is displayed for
+    retDData.data.append(str(random.randint(0,360))) #this is the rotation of the image in degrees
     retMessageDData.childrenObjects.append(retDData)
 
     gameDataRetMessageDData = decomposedData_python.decomposedData()
