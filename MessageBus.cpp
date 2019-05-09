@@ -195,7 +195,7 @@ void MessageBus::endFrame() {
 void MessageBus::addMessage(MessageData *message){
 	m_allMutex.lock();
 	if (message->messageType != "NULL") {
-		std::cout << message->messageType << std::endl;
+		//std::cout << message->messageType << std::endl;
 		if (message->messageType == "messages") {
 			for (size_t i = 0; i < message->messageContents.size(); i++)
 			{

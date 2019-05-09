@@ -26,6 +26,8 @@ protected:
 	std::vector<MenuItem> m_menuItems;
 	sf::RenderWindow *m_window;
 	std::vector<sf::Texture*> m_toDeleteTextures;
+
+	virtual void pv_onClick(MenuItem*, size_t, bool);
 public:
 	explicit Menu(sf::RenderWindow*);
 	//adds a menu item x and y screens away from the top left, of size provided by second argument(also measured relatively to the screen)
@@ -40,6 +42,7 @@ public:
 
 	//first argument is current size in pixels, second argument is desired size in window coverage%.
 	sf::Vector2f getScaleFactor(sf::Vector2f, sf::Vector2f)const;
+	//returns the actual pixel coordinate of a window%
 	sf::Vector2f getPixelCoordinate(sf::Vector2f)const;
 
 	virtual void update(updateEvent);

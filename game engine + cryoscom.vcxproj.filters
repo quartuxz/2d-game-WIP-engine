@@ -36,9 +36,6 @@
     <ClCompile Include="Serializable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MessagingComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,9 +66,6 @@
     <ClCompile Include="Bullet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AttackAndDefence.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AnimatorSprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -88,6 +82,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LevelMaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Parsable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerInventory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -108,9 +108,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Serializable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ObjectPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MessagingComponent.h">
@@ -143,9 +140,6 @@
     <ClInclude Include="Bullet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AttackAndDefence.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AnimatorSprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -167,6 +161,12 @@
     <ClInclude Include="LevelMaker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Parsable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerInventory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="bullet.png">
@@ -179,9 +179,6 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="enemyAI.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="level1.png">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="level1_v2.png">
@@ -214,10 +211,19 @@
     <Image Include="player_front_right_idle.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="EngieNWwalkANIM.png">
+    <Image Include="cryo_area_1.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="cryo_area_1.png">
+    <Image Include="Engiewalk_back_right.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Engiewalk_front_left.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Engiewalk_front_right.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Engiewalk_back_left.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -228,16 +234,10 @@
     <None Include="defaultScript.py">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="MyPythonClass.py">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="test_GS.py">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="gameSerializationUtils.dll">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shared_data.py">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

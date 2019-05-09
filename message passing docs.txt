@@ -34,6 +34,8 @@ the type of something can refer to the decomposedData type or an actual object`s
 
 messageTypes:
 
+
+
 there are a few different messageTypes of core messages in Gold Standard Game Engine;
 	"messages":this type converts all of its MessageContent`s into other messages. which in turn convert their childrenObjects into their MessageContent`s,
 				their first data index into the messageType, their second data index into their senderID and their third data index into their intendedReceiver. The messages are then sent individually.
@@ -54,6 +56,7 @@ there are a few messageTypes a script may receive, with information about the st
 	"interactionKeyPressed": indicates when the interaction key is pressed(default:`e´), sends the same data as the playerPosition messageType.
 
 there are few different messageTypes for gameplay and gameplay related interactions;
+*this area is incomplete, please refer to the pv_processMessage function in GameMain.cpp to check out other self-documenting message types
 	"applyEffectOnPlayer": the first data index in the first messageContent`s index is the effect Type, of which there are:
 																														-"damageOverTime"[hit points per second]
 																														-"staminaRegen"[stamina points per second]

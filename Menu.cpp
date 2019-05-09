@@ -2,6 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include "Animator.h"
+
+void Menu::pv_onClick(MenuItem*, size_t, bool)
+{
+}
 
 Menu::Menu(sf::RenderWindow *window):
 	m_window(window)
@@ -92,16 +97,14 @@ void Menu::createMenuFromFile(std::string fileName)
 			m_menuItems.push_back(MenuItem(menuItemDim));
 			sf::Sprite tempSprite;
 			if (tokens[4] != "" && tokens[4] != "-") {
-				sf::Texture* tempTex = new sf::Texture();
-				tempTex->loadFromFile(tokens[4]);
-				m_toDeleteTextures.push_back(tempTex);
-
-				tempSprite.setTexture(*tempTex);
-				m_menuItems.back().setTexture(tempSprite);
+				AnimatorSprite tempASprite;
+				tempASprite.textureID = Animator::getInstance().getTextureID(tokens[4]);
+				m_menuItems.back().setTexture(tempASprite);
 			}
+			//todo: make transparency work here
 			else if (tokens[4] == "transparent") {
-				tempSprite.setColor(sf::Color(0, 0, 0, 0));
-				m_menuItems.back().setTexture(tempSprite);
+				
+				//m_menuItems.back().setTexture(tempSprite);
 			}
 
 
@@ -134,6 +137,7 @@ std::vector<behaviourParameters> Menu::onClick(sf::Vector2f mousePos, bool click
 	for (size_t i = 0; i < m_menuItems.size(); i++)
 	{
 		if (m_menuItems[i].isClicked(mousePos)) {
+			pv_onClick(&m_menuItems[i], i, clicked);
 			return m_menuItems[i].click(clicked);
 		}
 
@@ -175,12 +179,17 @@ void Menu::createStaticMenuLayout()
 
 void Menu::draw(sf::Vector2f viewDisplacement)
 {
+
 	onDraw(true, viewDisplacement);
 	for (size_t i = 0; i < m_menuItems.size(); i++)
 	{
 		m_menuItems[i].draw(m_window, viewDisplacement);
 	}
 	onDraw(false, viewDisplacement);
+	for (size_t i = 0; i < m_menuItems.size(); i++)
+	{
+		m_menuItems[i].drawText(m_window, viewDisplacement);
+	}
 }
 
 Menu::~Menu()

@@ -55,10 +55,11 @@ void Animator::loadTexturesFromFile(std::string fileName) {
 			}
 			else if (tokens[0] == "loadAnimation") {
 				std::queue<AnimatorSprite> tempAnimation;
-				for (size_t i = 2; i < tokens.size(); i+=2)
+				float allAnimScale = std::atof(tokens[2].c_str());
+				for (size_t i = 3; i < tokens.size(); i+=2)
 				{
 					AnimatorSprite tempASprite;
-					tempASprite.scale = 2;
+					tempASprite.scale = allAnimScale;
 					tempASprite.textureID = getTextureID(tokens[i]);
 					tempASprite.timeDisplayed = ma_deserialize_float(tokens[i + 1]);
 					tempAnimation.push(tempASprite);
@@ -102,7 +103,13 @@ sf::Sprite Animator::m_getSprite(AnimatorSprite aSprite)
 		tempSprite.setOrigin(sf::Vector2f(tempSprite.getLocalBounds().width / 2, tempSprite.getLocalBounds().height / 2));
 	}
 	tempSprite.setPosition(aSprite.position);
-	tempSprite.setScale(sf::Vector2f(aSprite.scale, aSprite.scale));
+	if (aSprite.usesVectorScale) {
+		tempSprite.setScale(aSprite.vectorScale);
+	}
+	else {
+		tempSprite.setScale(sf::Vector2f(aSprite.scale, aSprite.scale));
+	}
+	
 	tempSprite.setRotation(aSprite.rotation);
 
 	return tempSprite;
@@ -162,19 +169,26 @@ unsigned int Animator::addTexture(std::string fileName)
 
 void Animator::addOneFrameSprite(const AnimatorSprite &aSprite)
 {
-	//m_allLock.lock();
+	m_allLock.lock();
     if (m_spritesToDraw.size() < (aSprite.drawLayer + 1)) {
 		m_spritesToDraw.resize(aSprite.drawLayer + 1);
 	}
 	if (aSprite.isActive) {
 		m_spritesToDraw[aSprite.drawLayer].push(m_getSprite(aSprite));
 	}
-	//m_allLock.unlock();
+	m_allLock.unlock();
 }
 
-std::map<std::string, AnimatorSprite>* Animator::getUnqiueAnimatorSprites()
+void Animator::clearNamedAnimatorSprites()
 {
-	return &m_uniqueAnimatorSprites;
+	m_allLock.lock();
+	m_namedAnimatorSprites.clear();
+	m_allLock.unlock();
+}
+
+std::map<std::string, AnimatorSprite>* Animator::getNamedAnimatorSprites()
+{
+	return &m_namedAnimatorSprites;
 }
 
 void Animator::addOneFrameSprite(ToolTip *toolTip)
@@ -278,7 +292,7 @@ unsigned int Animator::addAnimationPreset(std::queue<AnimatorSprite> animationPr
 void Animator::draw()
 {
 	m_allLock.lock();
-	for (auto const& x : m_uniqueAnimatorSprites)
+	for (auto const& x : m_namedAnimatorSprites)
 	{
 		addOneFrameSprite(x.second);
 	}

@@ -89,7 +89,7 @@ void EnemyAI::update(float timeDelta, std::vector<unit*> targets, MessageBus *ga
                                                     chosenTarget->getVelocity().x, chosenTarget->getVelocity().y,
                                                     m_controlledWeapon->canFire(),
                                                     m_controlledUnit->getBody()[0].first.x, m_controlledUnit->getBody()[0].first.y, m_controlledUnit->getBody()[0].second,
-                                                    m_controlledUnit->Amodule->bulletSpeed,
+                                                    m_controlledUnit->cModule.bulletSpeed,
                                                     hasHead,
                                                     headPos.x, headPos.y, headRadius,
                                                     m_followingDistance.x, m_followingDistance.y);
@@ -106,14 +106,14 @@ void EnemyAI::update(float timeDelta, std::vector<unit*> targets, MessageBus *ga
 
 //    if(m_controlledWeapon->canFire() && false){
 //        if((rand() % m_likelyHoodOfAccuracy) == 0 && checksForAccuracy && globalChecksForAccuracy){
-//            distToTarget = distance(chosenTarget->getPosition(), m_controlledUnit->getBody()[0].first);
+//            distToTarget = vectorDistance(chosenTarget->getPosition(), m_controlledUnit->getBody()[0].first);
 //            timeToTarget = distToTarget / m_controlledUnit->Amodule->bulletSpeed;
 //            sf::Vector2f newCTargetPos = chosenTarget->predictNextPos(timeToTarget);
 //            float lastTimeToTarget = std::numeric_limits<float>::max();
 //            int maxIterations = m_maxAccuracyIterations;
 //            while (abs(timeToTarget - lastTimeToTarget) > m_accuracyThreshHold) {
 //                //std::cout << "calcDist!" << std::endl;
-//                distToTarget = distance(newCTargetPos, m_controlledUnit->getBody()[0].first);
+//                distToTarget = vectorDistance(newCTargetPos, m_controlledUnit->getBody()[0].first);
 //                if (distToTarget > (m_controlledUnit->Amodule->bulletSpeed * m_controlledUnit->Amodule->bulletDuration)) {
 //                    maxIterations--;
 //                }
@@ -148,14 +148,14 @@ void EnemyAI::update(float timeDelta, std::vector<unit*> targets, MessageBus *ga
         m_controlledWeapon->fire(m_controlledUnit->getUnitVecTo(shootPos));
     }
 
-    m_controlledUnit->Dmodule->moveSpeed *= addedMoveSpeed;
-    if(distance(m_moveToPos, m_controlledUnit->getBody()[0].first) > 2){
+    m_controlledUnit->cModule.moveSpeed *= addedMoveSpeed;
+    if(vectorDistance(m_moveToPos, m_controlledUnit->getBody()[0].first) > 2){
         m_controlledUnit->applyMoveSpeed(m_controlledUnit->getUnitVecTo(m_moveToPos));
     }else{
         m_controlledUnit->applyInstantVelocity(sf::Vector2f(0,0));
 
     }
-    m_controlledUnit->Dmodule->moveSpeed /= addedMoveSpeed;
+    m_controlledUnit->cModule.moveSpeed /= addedMoveSpeed;
 
 	m_controlledWeapon->update(timeDelta, targets);
 }

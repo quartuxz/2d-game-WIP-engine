@@ -10,7 +10,7 @@
 #include "unitManager.h"
 #include "MessageBus.h"
 #include "Logger.h"
-
+#include "PlayerInventory.h"
 
 
 
@@ -19,9 +19,9 @@ class HUDMenu : public Menu {
 private:
     ToolTip m_availablePotions;
     void m_updatePotions(unsigned int);
+
 public:
 	using Menu::Menu;
-
 
 
     void onDraw(bool, sf::Vector2f)override;
@@ -40,7 +40,7 @@ private:
 	std::map<std::string ,Menu*> m_gameMenus;
 	std::string m_activeMenu = "mainMenu";
 	UnitManager * m_currentLevel = new UnitManager();
-	
+
 	std::recursive_mutex m_dataLock;
 	//MockMutex m_dataLock;
 
@@ -73,9 +73,9 @@ public:
 	//creates a GameMain instance from a file containing all the game level file names
 	GameMain(std::string);
 	//
-	//TODO: create a file format that holds the directories of all menu definition files, together with the name of each individual one- this will be passed to the function
+	//TODO: create a file format that holds the directories of all menu definition files, together with the name of each individual one- this will be passed to the function--DONE
 	//TODO: create a file format for the menuItems, specifying the behaviour of the each, the text, the size(in multiples of the scren size), the position(as the latter),
-	//the parameters for the behaviour and the texture file name
+	//the parameters for the behaviour and the texture file name--DONE
 	void createUIFromFile(std::string);
 
 	//create HUD, make it non-scriptable but hardcoded instead(HUD is part of essence of the game)

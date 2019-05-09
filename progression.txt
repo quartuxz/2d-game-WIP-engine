@@ -1,7 +1,11 @@
-gearPiece;0;0;chestPiece;1000;200;100;10;3;10;3;10;0.05;10;1;3;1;0;0;0;uniques;chestpiece.png;0.5;
-attackCard;chestPiece;10;0;0;1;0;0;0;
-defenceCard;chestPiece;0;1;0;1;0;0;0;0;0;0;0;
-gearPiece;0;0;helmet;1000;200;0;10;1;2;1;2;0;10;0;0;0;0;0;0;Some Helmet;player.png;0;
-attackCard;helmet;10;0;0;1;1;0;0;
-defenceCard;helmet;0;1;0;1;0;0;0;0;0;0;0;
+
 bag;0;60;
+
+bag;10;0;
+bag;10;0;
+bag;10;0;
+bag;10;0;
+bag;10;0;
+bag;10;0;
+bag;10;0;
+bag;10;0;

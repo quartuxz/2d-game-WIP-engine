@@ -7,7 +7,6 @@
 #include "Bullet.h"
 #include "Weapon.h"
 #include "unitManager.h"
-#include "AttackAndDefence.h"
 #include "EnemyAI.h"
 #include "Gear.h"
 #include "GameMain.h"
@@ -197,15 +196,19 @@ int main()
 //    }
 
     //python test
+	
+	sf::err().rdbuf(NULL);
+	
+	//memory test
+
 
 #if MAKING_LEVELS
     LevelMaker levelMaker;
 	levelMaker.levelMakerLoop("newFile.txt", "cryo_area_1.png");
 	return 0;
 #endif
-
-	GameMain gameMain("master.txt");
 	Animator::getInstance().loadTexturesFromFile("loaded_textures.txt");
+	GameMain gameMain("master.txt");
 	gameMain.spawnWindow();
 	gameMain.createUIFromFile("mainUI.txt");
 	gameMain.setProgressionFile("progression.txt");

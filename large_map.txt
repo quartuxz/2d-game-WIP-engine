@@ -1,12 +1,17 @@
 scaleFactor;3;
 worldTextureTile;0;0;0;0;0;1;cryo_area_1.png;
 
-player;50;50;25;20;player.png;
-gear;-1;-;-;100;20;100;10;2;100;2;20;0.05;1;3;1;0;0;0;0;-;-;-;
+player;50;50;24;20;player.png;
 bulletTexture;bullet.png;-1;
 
-gameScript;test_GS;
+//;gameScript;test_GS;
 
+
+spawnPoint;5;100;100;enemy_test.txt;enemy_test.txt;
+
+namedAnimatorSprite;perm_playerTex;player.png;289;540;1;2;
+namedWall;283;556;283;524;starting_door;
+interactable;messageSender;283;540;{,,messages,3,0,{,,editNamedWall,3,0,{,,starting_door,0,}}{,,editNamedAnimatorSprite,3,0,{,,perm_playerTex,,0,,,}}};10000;
 
 wall;144;76;144;301;
 wall;144;301;174;299;

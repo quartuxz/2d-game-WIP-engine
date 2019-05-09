@@ -8,16 +8,14 @@
 #include <stack>
 #include <math.h>
 #include <SFML/Graphics.hpp>
-#include "AttackAndDefence.h"
+#include "Gear.h"
+//#include "Weapon.h"
 #include "AnimatorSprite.h"
+#include "cryoscom_defsAndUtils.h"
 
 const sf::Vector2f graveyard = sf::Vector2f(-10000, -10000);
 
-float distance(sf::Vector2f v, sf::Vector2f w);
-sf::Vector2f rotateByAngle(sf::Vector2f, sf::Vector2f, float);
 
-float getAngleInDegrees(sf::Vector2f);
-sf::Vector2f getUnitVec(sf::Vector2f, sf::Vector2f);
 
 enum unitType {
 	playerType, bulletType, defaultType
@@ -60,7 +58,7 @@ private:
 	std::vector<std::pair<sf::Vector2f, float>> body;
 	sf::Sprite texture;
 	float actualWeight = 100;
-	sf::Vector2f lastMove;
+
 
 	float lastTime = 0;
 
@@ -100,6 +98,8 @@ public:
 	AnimatorSprite front_left_idle;
 	AnimatorSprite front_right_idle;
 
+	sf::Vector2f lastMove;
+
     sf::Vector2f lastPos;
     sf::Vector2f lastLastPos;
 
@@ -108,8 +108,8 @@ public:
 	AnimatorSprite *getAnimationController()const;
 	void setAnimationController(AnimatorSprite*);
 
-	AttackModule *Amodule = nullptr;
-	DefenceModule *Dmodule = nullptr;
+	combatModule cModule;
+	//Weapon weapon;
 
 	bool isMoving(float threshHold = 0.1)const;
 
@@ -145,6 +145,7 @@ public:
 	void applyForce(sf::Vector2f, float);
 	void applyForce(sf::Vector2f);
 
+	void setPosition(sf::Vector2f);
 	sf::Vector2f getPosition()const;
 
 	float getVelocityMag()const;

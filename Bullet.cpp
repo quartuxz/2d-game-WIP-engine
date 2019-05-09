@@ -12,13 +12,13 @@ std::map<int, Bullet*> Bullet::getAllBullets()
 void Bullet::create(sf::Vector2f startPos, sf::Vector2f moveDir)
 {
 	std::vector<std::pair<sf::Vector2f, float>> body;
-	body.push_back(std::pair<sf::Vector2f, float>(startPos, Amodule->bulletSize));
+	body.push_back(std::pair<sf::Vector2f, float>(startPos, cModule->bulletSize));
 	bulletBody = new unit(body);
-	bulletBody->applyInstantVelocity(sf::Vector2f(moveDir.x, moveDir.y), Amodule->bulletSpeed);
+	bulletBody->applyInstantVelocity(sf::Vector2f(moveDir.x, moveDir.y), cModule->bulletSpeed);
 }
 
-Bullet::Bullet(sf::Vector2f startPos, sf::Vector2f moveDir, AttackModule *amodule):
-	Amodule(amodule)
+Bullet::Bullet(sf::Vector2f startPos, sf::Vector2f moveDir, combatModule *cmodule):
+	cModule(cmodule)
 {
 
 	create(startPos, moveDir);
@@ -34,10 +34,8 @@ int Bullet::hits(std::vector<unit*> units)
 	for (size_t i = 0; i < units.size(); i++)
 	{
 		if (units[i]->collides(*bulletBody)>0) {
-			attackParameters tempAParams;
-			tempAParams.bulletDir = bulletBody->getVelocity();
-			Amodule->attack(units[i]->Dmodule, units[i]->Amodule, Dmodule, tempAParams);
-			if (units[i]->Dmodule->hitPoints <= 0) {
+			cModule->attack(&units[i]->cModule);
+			if (units[i]->cModule.hitpoints <= 0) {
                 units[i]->kill();
 				retVal = i;
 			}
@@ -81,7 +79,7 @@ int Bullet::getID() const
 void Bullet::update(float timeDelta)
 {
 	timeSinceCreation += timeDelta;
-	if (timeSinceCreation > Amodule->bulletDuration) {
+	if (timeSinceCreation > cModule->bulletDuration) {
 		bulletBody->move(sf::Vector2f(-bulletBody->getPosition().x, -bulletBody->getPosition().y));
 		bulletBody->move(graveyard);
 		bulletBody->isDead = true;

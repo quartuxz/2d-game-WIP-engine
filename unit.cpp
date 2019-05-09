@@ -39,7 +39,7 @@ sf::Vector2f unit::getVelocity() const
 
 void unit::applyMoveSpeed(sf::Vector2f unitVec)
 {
-	applyInstantVelocity(unitVec, Dmodule->moveSpeed);
+	applyInstantVelocity(unitVec, cModule.moveSpeed);
 }
 
 void unit::applyInstantVelocity(sf::Vector2f unitVec, float mag)
@@ -129,7 +129,7 @@ AnimatorSprite unit::getAnimatorSprite()
 			//	retVal = *animationController;
 			//}
 		}
-		retVal.scale = body[0].second / ((Animator::getInstance().getTexture(retVal.textureID)->getSize().y + Animator::getInstance().getTexture(retVal.textureID)->getSize().x) / 4);
+		retVal.scale *= body[0].second / ((Animator::getInstance().getTexture(retVal.textureID)->getSize().y + Animator::getInstance().getTexture(retVal.textureID)->getSize().x) / 4);
 		retVal.position = body[0].first;
 		retVal.position.y -= body[0].second * 0.5;
 	}
@@ -170,6 +170,11 @@ void unit::move(sf::Vector2f delta)
 	}
 	lastMove = delta;
 
+}
+
+void unit::setPosition(sf::Vector2f pos)
+{
+	move(pos-body[0].first);
 }
 
 sf::Vector2f unit::getPosition() const
@@ -292,31 +297,29 @@ void unit::update(float seconds, std::vector<unit*> colliders)
 	}
 
 	move(velocity * seconds);
-	if (Dmodule != nullptr) {
-		Dmodule->processEffects(seconds, Amodule);
-		Dmodule->stamina += Dmodule->staminaRegen * seconds;
-		if (Dmodule->stamina > 100) {
-			Dmodule->stamina = 100;
-		}
-		if (!Dmodule->pushes.empty()) {
-			for (size_t i = 0; i < Dmodule->pushes.size(); i++)
-			{
-				move(Dmodule->pushes[i].first * std::min<float>(seconds, Dmodule->pushes[i].second));
-				Dmodule->pushes[i].second -= seconds;
-				if (Dmodule->pushes[i].second < 0) {
-					Dmodule->pushes.erase(Dmodule->pushes.begin() + i);
-				}
+	cModule.processEffects(seconds);
+	cModule.stamina += cModule.staminaRegen * seconds;
+	if (cModule.stamina > 100) {
+		cModule.stamina = 100;
+	}
+	if (!cModule.pushes.empty()) {
+		for (size_t i = 0; i < cModule.pushes.size(); i++)
+		{
+			move(cModule.pushes[i].first * std::min<float>(seconds, cModule.pushes[i].second));
+			cModule.pushes[i].second -= seconds;
+			if (cModule.pushes[i].second < 0) {
+				cModule.pushes.erase(cModule.pushes.begin() + i);
 			}
+		}
 			
-		}
+	}
 
-		Dmodule->hitPoints -= (Dmodule->damageTakenPerSecond * seconds);
-		if (Dmodule->hitPoints <= 0 && recentlyDead) {
-			kill();
-		}
-		if (Dmodule->hitPoints > Dmodule->hitPoinCap) {
-			Dmodule->hitPoints = Dmodule->hitPoinCap;
-		}
+	cModule.hitpoints -= (cModule.damageTakenPerSecond * seconds);
+	if (cModule.hitpoints <= 0 && recentlyDead) {
+		kill();
+	}
+	if (cModule.hitpoints > cModule.hitpointCap) {
+		cModule.hitpoints = cModule.hitpointCap;
 	}
 
 	m_collide(colliders);
@@ -403,47 +406,8 @@ float unit::collides(const unit &collider, sf::Vector2f *evadePos)
 unit::~unit()
 {
 	delete animationController;
-	delete Amodule;
-	delete Dmodule;
 }
 
-sf::Vector2f rotateByAngle(sf::Vector2f o, sf::Vector2f p, float angle)
-{
-	float s = sin(angle * (M_PI/180));
-	float c = cos(angle * (M_PI/180));;
-
-	// translate point back to origin:
-	p.x -= o.x;
-	p.y -= o.y;
-
-	// rotate point
-	float xnew = p.x * c - p.y * s;
-	float ynew = p.x * s + p.y * c;
-
-	// translate point back:
-	p.x = xnew + o.x;
-	p.y = ynew + o.y;
-	return p;
-}
-
-float getAngleInDegrees(sf::Vector2f unitVec)
-{
-	return std::atan2(unitVec.x, -unitVec.y) * 180 / M_PI;
-}
-
-sf::Vector2f getUnitVec(sf::Vector2f pos1, sf::Vector2f pos2)
-{
-	sf::Vector2f dist = sf::Vector2f(pos2 - pos1);
-	float mag = sqrt(pow(dist.x, 2) + pow(dist.y, 2));
-	//std::cout << newUnit.getBody()[0].first.x << ", " << newUnit.getBody()[0].first.y << std::endl;
-	return sf::Vector2f(sf::Vector2f(dist.x / mag, dist.y / mag));
-}
-
-
-float distance(sf::Vector2f v, sf::Vector2f w)
-{
-	return std::sqrt(pow(v.x - w.x, 2) + pow(v.y - w.y, 2));
-}
 
 AnimatorSprite unitAnimatorValues::m_getIdleASprite(lookDirection lDir)
 {

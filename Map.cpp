@@ -50,12 +50,13 @@ void Map::update(unit *units)
 		auto body = units->getBody();
 		for (size_t p = 0; p < body.size(); p++)
 		{
+			sf::Vector2f intersectMovePoint;
 			sf::Vector2f proj;
 			float dist = minimum_distance(walls[o].wall.first, walls[o].wall.second, body[p].first, &proj);
 			//this if checks for collision with wall
 			if (dist < body[p].second) {
 				//this if checks if the object is on the correct side of the wall, else, it transports(deprecated after the comma) it to the correct side upon collsiion.
-				if (length_squared(walls[o].inside, body[p].first) < length_squared(walls[o].getOutside(), body[p].first)) {
+				if (distanceSquared(walls[o].inside, body[p].first) < distanceSquared(walls[o].getOutside(), body[p].first)) {
 					float dist2 = sqrt(pow(body[p].first.x - proj.x, 2) + pow(body[p].first.y - proj.y, 2));
 					units->move(sf::Vector2f(((body[p].first.x - proj.x) / dist2) * (body[p].second - dist), ((body[p].first.y - proj.y) / dist2) * (body[p].second - dist)));
 					//units->hitsWall(sf::Vector2f(((body[p].first.x - proj.x) / dist2) * (body[p].second - dist), ((body[p].first.y - proj.y) / dist2) * (body[p].second - dist)));
@@ -66,7 +67,9 @@ void Map::update(unit *units)
 				//	units->move(reflected - body[p].first);
 				//	//units->hitsWall(reflected - body[p].first);
 				//}
-
+				if (LineSegementsIntersect(units->lastPos, body[p].first, walls[o].wall.first, walls[o].wall.second, &intersectMovePoint)) {
+					units->setPosition(units->lastLastPos);
+				}
 			}
 		}
 	}
@@ -96,7 +99,7 @@ void Map::addWall(sf::Vector2f first, sf::Vector2f second, bool clockWiseFromFir
 	wall.wall = std::pair<sf::Vector2f, sf::Vector2f>(first, second);
 	wall.inside = rotate90(sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2), first);
 
-	float dist = distance(wall.inside - (sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2)), sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2));
+	float dist = vectorDistance(wall.inside - (sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2)), sf::Vector2f((first.x + second.x) / 2, (first.y + second.y) / 2));
 	//std::cout << wall.inside.x << ", " << wall.inside.y << std::endl;
 	wall.inside.x -= (first.x + second.x) / 2;
 	wall.inside.y -= (first.y + second.y) / 2;
@@ -133,10 +136,7 @@ Map::~Map()
 {
 }
 
-float length_squared(sf::Vector2f v, sf::Vector2f w)
-{
-	return pow(v.x - w.x, 2) + pow(v.y - w.y, 2);
-}
+
 
 float dot(sf::Vector2f v, sf::Vector2f w)
 {
@@ -146,8 +146,8 @@ float dot(sf::Vector2f v, sf::Vector2f w)
 float minimum_distance(sf::Vector2f v, sf::Vector2f w, sf::Vector2f p, sf::Vector2f *proj)
 {
 	// Return minimum distance between line segment vw and point p
-	const float l2 = length_squared(v, w);  // i.e. |w-v|^2 -  avoid a sqrt
-	if (l2 == 0.0) return distance(p, v);   // v == w case
+	const float l2 = distanceSquared(v, w);  // i.e. |w-v|^2 -  avoid a sqrt
+	if (l2 == 0.0) return vectorDistance(p, v);   // v == w case
 											// Consider the line extending the segment, parameterized as v + t (w - v).
 											// We find projection of point p onto the line. 
 											// It falls where t = [(p-v) . (w-v)] / |w-v|^2
@@ -157,7 +157,7 @@ float minimum_distance(sf::Vector2f v, sf::Vector2f w, sf::Vector2f p, sf::Vecto
 	if (proj != nullptr) {
 		*proj = projection;
 	}
-	return distance(p, projection);
+	return vectorDistance(p, projection);
 }
 
 sf::Vector2f reflect(sf::Vector2f v, sf::Vector2f w, sf::Vector2f p)
