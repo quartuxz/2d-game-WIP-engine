@@ -1,6 +1,8 @@
+#include <limits>
 #include "MessagingComponent.h"
 #include "cryoscom_defsAndUtils.h"
 #include "globalMutexes.h"
+
 
 MessageData::MessageData(){
 
@@ -39,8 +41,15 @@ void MessageData::createFrom(const decomposedData& DData) {
 	senderID = fast_atou(DData.data[1].c_str());
 	intendedReceiverID = fast_atou(DData.data[2].c_str());
 #else
-	senderID = atoi(DData.data[1].c_str());
-	intendedReceiverID = atoi(DData.data[2].c_str());
+
+	if (std::atoi(DData.data[1].c_str()) == -1) {
+		senderID = std::numeric_limits<size_t>::max();
+	}
+	else {
+		senderID = std::atoi(DData.data[1].c_str());
+	}
+	
+	intendedReceiverID = std::atoi(DData.data[2].c_str());
 #endif
 	for (size_t i = 0; i < DData.childrenObjects.size(); i++)
 	{

@@ -1,7 +1,7 @@
 #include "MenuItem.h"
 #include <iostream>
 #include "ToolTip.h"
-
+#include "Animator.h"
 
 std::string ReplaceString(std::string subject, const std::string& search,
 	const std::string& replace) {
@@ -65,7 +65,7 @@ std::vector<behaviourParameters> MenuItem::click(bool clicked){
     if(!clicked){
         return retVal;
     }
-    if(m_clickTimer.getElapsedTime().asSeconds() > m_clickCooldown || m_firstClick){
+    if(m_clickTimer.getElapsedTime().asSeconds() > m_clickCooldown || m_firstClick || !m_hasClickTimer){
         m_firstClick = false;
         m_clickTimer.restart();
         return retVal;
@@ -79,10 +79,25 @@ MenuItem::MenuItem(sf::Rect<float> dim) :
         m_clickTimer.restart();
 }
 
+void MenuItem::clearBehaviours()
+{
+	m_behaviours.clear();
+}
+
+void MenuItem::setIsButtonTextDisplayed(bool isButtonTextSet)
+{
+	m_isButtonTextSet = isButtonTextSet;
+}
+
+bool MenuItem::getIsButtonTextDisplayed() const
+{
+	return m_isButtonTextSet;;
+}
+
 void MenuItem::setButtonText(std::string text, float margins, sf::Color textColor, unsigned int style) {
 	text = ReplaceString(text, "@", "\n");
 	float minMarginsInPixels = std::min(margins * m_item.width, margins * m_item.height);
-	m_buttonTextSet = true;
+	m_isButtonTextSet = true;
 	m_buttonText.setStyle(style);
 	m_buttonText.setFillColor(textColor);
 	m_buttonText.setFont(*ToolTip::getFont());
@@ -92,6 +107,16 @@ void MenuItem::setButtonText(std::string text, float margins, sf::Color textColo
 	size_t lines = std::count(text.begin(), text.end(), '\n');
 	lines++;
 	m_buttonText.setCharacterSize(std::min((m_item.width - (minMarginsInPixels * 2)) / (text.length() / lines), (m_item.height - (minMarginsInPixels * 2)) / lines));
+}
+
+void MenuItem::setHasClickTimer(bool hasClickTimer)
+{
+	m_hasClickTimer = hasClickTimer;
+}
+
+bool MenuItem::getHasClickTimer() const
+{
+	return m_hasClickTimer;
 }
 
 void MenuItem::addbehaviourFromString(std::vector<std::string> behaviours)
@@ -126,6 +151,14 @@ void MenuItem::move(sf::Vector2f delta)
 	moveTransform += delta;
 }
 
+void MenuItem::fitASpriteToItem(AnimatorSprite *aSprite)
+{
+	sf::Vector2f textureSize = sf::Vector2f(Animator::getInstance().getTexture(aSprite->textureID)->getSize());
+	aSprite->position = getPosition() + sf::Vector2f(getDimension().x / 2, getDimension().y / 2);
+	aSprite->originToCenter = true;
+	aSprite->scale = std::min(getDimension().x / textureSize.x, getDimension().y / textureSize.y) / 1.2;
+}
+
 void MenuItem::setPosition(sf::Vector2f pos)
 {
 	moveTransform.x = -m_item.left;
@@ -148,17 +181,22 @@ void MenuItem::reestablishInitialPostion()
 	moveTransform = sf::Vector2f(0,0);
 }
 
-void MenuItem::setTexture(sf::Sprite tex)
+
+void MenuItem::setTexture(const AnimatorSprite& aSprite)
 {
-	m_tex = tex;
-	m_tex.setPosition(sf::Vector2f(m_item.left, m_item.top));
-	m_tex.setScale(sf::Vector2f(m_item.width/m_tex.getGlobalBounds().width, m_item.height / m_tex.getGlobalBounds().height));
+	m_ASprite = aSprite;
+	m_ASprite.originToCenter = false;
+	m_ASprite.usesVectorScale = true;
+	m_ASprite.position = sf::Vector2f(m_item.left, m_item.top);
+	sf::Vector2f textureSize = sf::Vector2f(Animator::getInstance().getTexture(aSprite.textureID)->getSize());
+	m_ASprite.vectorScale = sf::Vector2f(m_item.width / textureSize.x, m_item.height / textureSize.y);
+	m_isTextureSet = true;
 }
 
 void MenuItem::draw(sf::RenderWindow* window, sf::Vector2f viewDisplacement)
 {
 	//temporary texture for menuItem, a blue square the size of the target bounding rectangle.
-	if (m_tex.getTexture() == nullptr) {
+	if (!m_isTextureSet) {
 		sf::RectangleShape tempRectS;
 		tempRectS.setFillColor(sf::Color(55, 10, 0, 150));
 		tempRectS.setSize(sf::Vector2f(m_item.width, m_item.height));
@@ -168,13 +206,17 @@ void MenuItem::draw(sf::RenderWindow* window, sf::Vector2f viewDisplacement)
 		tempRectS.move(viewDisplacement + moveTransform);
 		window->draw(tempRectS);
 	}
-	else {
-
-		m_tex.move(viewDisplacement + moveTransform);
-		window->draw(m_tex);
-		m_tex.move(-(viewDisplacement + moveTransform));
+	else{
+		m_ASprite.position += viewDisplacement + moveTransform;
+		Animator::getInstance().instantDraw(m_ASprite);
+		m_ASprite.position -= viewDisplacement + moveTransform;
 	}
-	if (m_buttonTextSet) {
+
+}
+
+void MenuItem::drawText(sf::RenderWindow *window, sf::Vector2f viewDisplacement)
+{
+	if (m_isButtonTextSet) {
 		m_buttonText.move(viewDisplacement + moveTransform);
 		window->draw(m_buttonText);
 		m_buttonText.move(-(viewDisplacement + moveTransform));

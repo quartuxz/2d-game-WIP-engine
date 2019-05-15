@@ -2,6 +2,7 @@
 #include <vector>
 #include "unit.h"
 #include <SFML/Graphics.hpp>
+#include "Gear.h"
 
 class Bullet
 {
@@ -20,11 +21,10 @@ private:
 public:
 	static std::map<int, Bullet*> getAllBullets();
 
-	AttackModule *Amodule;
-	DefenceModule *Dmodule;
+	combatModule* cModule;
 
 	void create(sf::Vector2f, sf::Vector2f);
-	Bullet(sf::Vector2f, sf::Vector2f, AttackModule*);
+	Bullet(sf::Vector2f, sf::Vector2f, combatModule*);
 	int hits(std::vector<unit*>);
 	bool onHit(unit*);
 	bool onWallHit();

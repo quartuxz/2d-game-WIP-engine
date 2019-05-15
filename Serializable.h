@@ -53,7 +53,6 @@ class Serializable
 {
     public:
         Serializable();
-        //virtual std::string getTypeName() = 0;
         virtual void createFrom(const decomposedData&) = 0;
         virtual decomposedData serialize() = 0;
         virtual ~Serializable();

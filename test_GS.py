@@ -21,8 +21,20 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
         inDData0.createFrom(paramList[0])
 
 
+    #used for creating custom messages
+    tempDData = decomposedData_python.decomposedData()
+    tempDData.data.append("starting_door")
+    tempDData.data.append("0")
 
+    tempDData2 = decomposedData_python.decomposedData()
+    tempDData2.data.append("perm_playerTex")
+    tempDData2.data.append("")
+    tempDData2.data.append("0")
+    tempDData2.data.append("")
+    tempDData2.data.append("")
 
+ 
+    print(decomposedData_python.makeDDataMessage("messages", selfID,0,decomposedData_python.makeDDataMessage("editNamedWall", selfID,0, tempDData), decomposedData_python.makeDDataMessage("editNamedAnimatorSprite", selfID,0, tempDData2)).serialize())
 
     #shm = shared_memory.SharedMemory(memoryBlockName)
     if messageType == "onProgramEnd":
@@ -34,12 +46,9 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
         return ("NULL",0,"")
 
 
-    #shm.buf[0] = 10
-    #print(shm.buf)
-    retMessageDData = decomposedData_python.decomposedData()
-    retMessageDData.data.append("displayDecal")
-    retMessageDData.data.append(str(selfID))
-    retMessageDData.data.append(str(0))
+    if messageType == "interactionKeyPressed":
+        return ("NULL",0,"")
+
     retDData = decomposedData_python.decomposedData()
     retDData.type = "AnimatorSprite"
     retDData.name = "displayedSpriteName"
@@ -51,16 +60,8 @@ def gameScript(askingForName, messageType, senderID, intendedReceiverID, paramLi
     retDData.data.append("2") #this is the scale of the image
     retDData.data.append("3") #this is how much time the image is displayed for
     retDData.data.append(str(random.randint(0,360))) #this is the rotation of the image in degrees
-    retMessageDData.childrenObjects.append(retDData)
 
-    gameDataRetMessageDData = decomposedData_python.decomposedData()
-    gameDataRetMessageDData.data.append("editGameData")
-    gameDataRetMessageDData.data.append(str(selfID))
-    gameDataRetMessageDData.data.append(str(0))
-    gameDataRetMessageDData.childrenObjects.append(gameData)
     #shm.close()
 
-    #return("displayDecal", 0, decomposedData_python.formatToSend(retDData))
-    #return ("messages", 0, decomposedData_python.makeDDataMessage("displayDecal", selfID, 0, retDData).serialize()+";"+ gameDataRetMessageDData.serialize()+";")
     return ("messages", 0, decomposedData_python.formatToSend(decomposedData_python.makeDDataMessage("displayDecal", selfID, 0, retDData), decomposedData_python.makeDDataMessage("editGameData", selfID, 0, gameData)))
 

@@ -6,6 +6,7 @@
 #include "cryoscom_defsAndUtils.h"
 
 
+
 const float UnitManager::m_itemPickupCooldown = 2;
 
 #if MULTITHREADED_SCRIPTING_AND_MESSAGING
@@ -68,50 +69,51 @@ void MarketMenu::onDraw(bool beforeDraw, sf::Vector2f viewDisplacement)
 	}
 }
 
-void MarketMenu::addToolTips(Gear playerGear)
-{
-	mutexLock.lock();
-	m_playerGear.clear();
-
-	AnimatorSprite tempASprite;
-	tempASprite.textureID = Animator::getInstance().getTextureID("tooltip.png");
-	tempASprite.originToCenter = false;
-	tempASprite.scale = 6;
-
-	sf::Vector2f scaleFactor =  getScaleFactor(sf::Vector2f(Animator::getInstance().getTexture(Animator::getInstance().getTextureID("tooltip.png"))->getSize()) * tempASprite.scale, sf::Vector2f(0.2, 0.4));
-
-	ToolTip tempToolTip;
-
-
-
-	tempToolTip.setScale(scaleFactor.x);
-	tempToolTip.setTexture(tempASprite);
-
-	auto gearItems = playerGear.getGearItems();
-	std::map<std::string, GearPiece>::iterator it;
-	for (it = gearItems.begin(); it != gearItems.end(); it++){
-		tempToolTip.clearText();
-		tempToolTip.makeTooltipForGear(it->second);
-		m_playerGearCost[it->first] = it->second.goldValue;
-		if (it->first == "chestPiece") {
-			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.1, 0.15)));
-		}
-
-		if (it->first == "helmet") {
-			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.3, 0.15)));
-		}
-
-		if (it->first == "boots") {
-			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.5, 0.15)));
-		}
-
-		if (it->first == "weapon") {
-			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.7, 0.15)));
-		}
-		m_playerGear.push_back(tempToolTip);
-	}
-	mutexLock.unlock();
-}
+//deprecated
+//void addToolTips(gearPiece playerGear)
+//{
+//	mutexLock.lock();
+//	m_playerGear.clear();
+//
+//	AnimatorSprite tempASprite;
+//	tempASprite.textureID = Animator::getInstance().getTextureID("tooltip.png");
+//	tempASprite.originToCenter = false;
+//	tempASprite.scale = 6;
+//
+//	sf::Vector2f scaleFactor =  getScaleFactor(sf::Vector2f(Animator::getInstance().getTexture(Animator::getInstance().getTextureID("tooltip.png"))->getSize()) * tempASprite.scale, sf::Vector2f(0.2, 0.4));
+//
+//	ToolTip tempToolTip;
+//
+//
+//
+//	tempToolTip.setScale(scaleFactor.x);
+//	tempToolTip.setTexture(tempASprite);
+//
+//	auto gearItems = playerGear.getGearItems();
+//	std::map<std::string, GearPiece>::iterator it;
+//	for (it = gearItems.begin(); it != gearItems.end(); it++){
+//		tempToolTip.clearText();
+//		tempToolTip.makeTooltipForGear(it->second);
+//		m_playerGearCost[it->first] = it->second.goldValue;
+//		if (it->first == "chestPiece") {
+//			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.1, 0.15)));
+//		}
+//
+//		if (it->first == "helmet") {
+//			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.3, 0.15)));
+//		}
+//
+//		if (it->first == "boots") {
+//			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.5, 0.15)));
+//		}
+//
+//		if (it->first == "weapon") {
+//			tempToolTip.setPosition(getPixelCoordinate(sf::Vector2f(0.7, 0.15)));
+//		}
+//		m_playerGear.push_back(tempToolTip);
+//	}
+//	mutexLock.unlock();
+//}
 
 void MarketMenu::update(updateEvent)
 {
@@ -126,7 +128,7 @@ void UnitManager::m_updateAIWeapons(std::vector<Weapon*> AIWeapons)
 		std::list<Bullet*>::iterator it2;
 		for (it2 = AIWeaponBullets.begin(); it2 != AIWeaponBullets.end(); ++it2)
 		{
-			if (distance((*it2)->getBody()->getBody()[0].first, m_player->getBody()[0].first) < renderDistance) {
+			if (vectorDistance((*it2)->getBody()->getBody()[0].first, m_player->getBody()[0].first) < renderDistance) {
 				if (m_map->collides((*it2)->getBody())) {
 
 					(*it2)->onWallHit();
@@ -156,9 +158,202 @@ void UnitManager::m_updatePlayer(float timeDelta ,std::vector<unit*> nonPlayerUn
 	mutexLock.unlock();
 }
 
-Gear UnitManager::getGear() const
+void UnitManager::pv_parseStep(std::vector<std::string> tokens)
 {
-	return m_gear;
+	mutexLock.lock();
+	if (tokens[0] == "spawnPoint") {
+		constexpr unsigned int displacementScale = 1;
+
+		unsigned int enemies = std::atoi(tokens[1].c_str());
+		std::vector<std::string> enemyFileName;
+		for (size_t i = 4; i < tokens.size(); i++)
+		{
+			enemyFileName.push_back(tokens[i]);
+		}
+
+		for (size_t i = 0; i < enemies; i++)
+		{
+			size_t lastEnemyUnits = m_AIs.size();
+			createFromFile(enemyFileName[rand() % enemyFileName.size()]);
+			for (size_t o = lastEnemyUnits; o < m_AIs.size(); o++)
+			{
+				//((rand() % (displacementScale * 10)) / displacementScale) * ((rand() % 2) ? -1 : 1)
+				const float microDisplacementX = (rand() % enemies);
+				const float microDisplacementY = (rand() % enemies);
+				m_AIs[o]->getUnit()->move(sf::Vector2f((std::atof(tokens[2].c_str()) * m_levelScale) + microDisplacementX, (std::atof(tokens[3].c_str()) * m_levelScale) + microDisplacementY));
+				for (size_t p = 0; p < m_AIs.size(); p++) {
+					m_AIs[o]->getUnit()->collideOne(m_AIs[p]->getUnit());
+				}
+
+			}
+		}
+		while (false) {
+			//std::cout << m_AIs.size() << std::endl;
+		}
+
+	}
+
+	else if (tokens[0] == "scaleFactor") {
+		m_levelScale = std::atof(tokens[1].c_str());
+	}
+
+	else if (tokens[0] == "wall") {
+		//std::cout << tokens.size() << std::endl;
+		//system("pause");
+		m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale), (sf::Vector2f(std::atof(tokens[3].c_str()) * m_levelScale, std::atof(tokens[4].c_str()) * m_levelScale)));
+	}
+	else if (tokens[0] == "namedWall") {
+		m_map->addNamedWall(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale), (sf::Vector2f(std::atof(tokens[3].c_str()) * m_levelScale, std::atof(tokens[4].c_str()) * m_levelScale)), tokens[5]);
+	}
+	else if (tokens[0] == "namedAnimatorSprite") {
+		AnimatorSprite tempASprite;
+		tempASprite.textureID = Animator::getInstance().getTextureID(tokens[2]);
+		tempASprite.position = sf::Vector2f(std::atof(tokens[3].c_str())*m_levelScale, std::atof(tokens[4].c_str())*m_levelScale);
+		tempASprite.scale = std::atof(tokens[5].c_str())*m_levelScale;
+		tempASprite.drawLayer = std::atoi(tokens[6].c_str());
+		Animator::getInstance().getNamedAnimatorSprites()->insert(std::make_pair(tokens[1], std::move(tempASprite)));
+	}
+	else if (tokens[0] == "unit") {
+		EnemyAI* tempAI = new EnemyAI();
+		std::vector<std::pair<sf::Vector2f, float>> unitBody;
+		unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str())) * m_levelScale, std::atof(tokens[3].c_str())));
+		unit* tempUnit = new unit(unitBody);
+		tempUnit->typeOfUnit = defaultType;
+		tempUnit->setWeight(std::atof(tokens[4].c_str()));
+
+		tempUnit->cModule.moveSpeed = 100;
+		tempUnit->cModule.damage = 5;
+
+		tempAI->setUnit(tempUnit);
+		m_AIs.push_back(tempAI);
+		if (tokens.size() > 5) {
+			AnimatorSprite tempASprtie;
+			tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[5]);
+
+			tempAI->getUnit()->setAnimatorSprite(tempASprtie);
+		}
+		if (tokens.size() > 6) {
+			tempAI->createFromFile(tokens[6]);
+		}
+		if (tokens.size() > 7) {
+			tempAI->setHead(m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[7].c_str())]->getUnit(), sf::Vector2f(std::atof(tokens[8].c_str()), std::atof(tokens[9].c_str())));
+		}
+
+	}else if (tokens[0] == "interactable") {
+		
+		if (tokens[1] == "messageSender") {
+			interactable tempInteractable;
+			tempInteractable.isMessaging = true;
+			tempInteractable.sentMessage = tokens[4];
+			tempInteractable.position = sf::Vector2f(std::atof(tokens[2].c_str()) * m_levelScale, std::atof(tokens[3].c_str())*m_levelScale);
+			tempInteractable.activationRadius = std::atof(tokens[5].c_str())*m_levelScale;
+			addInteractable(tempInteractable);
+		}
+
+	}
+	else if (tokens[0] == "tooltip") {
+		ToolTip* toolTip = new ToolTip();
+		AnimatorSprite tempASprite;
+		if (tokens[1] == "") {
+			tempASprite.isActive = false;
+		}
+		else {
+			tempASprite.textureID = Animator::getInstance().getTextureID(tokens[1]);
+		}
+
+		toolTip->setTexture(tempASprite);
+		toolTip->setPosition(sf::Vector2f(std::atof(tokens[2].c_str()) * m_levelScale, std::atof(tokens[3].c_str()) * m_levelScale));
+		toolTip->setScale(std::atof(tokens[4].c_str()));
+		sf::Text tempTooltipText;
+		tempTooltipText.setFont(*ToolTip::getFont());
+		tempTooltipText.setString(tokens[5]);
+		tempTooltipText.setScale(sf::Vector2f(0.1, 0.1));
+		tempTooltipText.setFillColor(sf::Color::Green);
+		toolTip->addText(tempTooltipText);
+		addToolTip(toolTip);
+
+	}
+	else
+	if (tokens[0] == "player") {
+		std::vector<std::pair<sf::Vector2f, float>> unitBody;
+		unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale), std::atof(tokens[3].c_str())));
+		m_player = new unit(unitBody);
+		m_player->typeOfUnit = playerType;
+		m_player->setWeight(std::atof(tokens[4].c_str()));
+		if (tokens.size() > 5) {
+			AnimatorSprite tempASprtie;
+			tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[5]);
+
+			m_player->setAnimatorSprite(tempASprtie);
+		}
+		m_player->animatorValues.back_left_idle.textureID = Animator::getInstance().getTextureID("player_back_left_idle.png");
+		m_player->animatorValues.back_left_idle.drawLayer = 2;
+		m_player->animatorValues.back_right_idle.textureID = Animator::getInstance().getTextureID("player_back_right_idle.png");
+		m_player->animatorValues.back_right_idle.drawLayer = 2;
+		m_player->animatorValues.front_left_idle.textureID = Animator::getInstance().getTextureID("player_front_left_idle.png");
+		m_player->animatorValues.front_left_idle.drawLayer = 2;
+		m_player->animatorValues.front_right_idle.textureID = Animator::getInstance().getTextureID("player_front_right_idle.png");
+		m_player->animatorValues.front_right_idle.drawLayer = 2;
+		m_player->animatorValues.front_right_walking = Animator::getInstance().getAnimationPresetID("player_front_right_walk");
+		m_player->animatorValues.front_left_walking = Animator::getInstance().getAnimationPresetID("player_front_left_walk");
+		m_player->animatorValues.back_right_walking = Animator::getInstance().getAnimationPresetID("player_back_right_walk");
+		m_player->animatorValues.back_left_walking = Animator::getInstance().getAnimationPresetID("player_back_left_walk");
+		m_player->animatorValues.usingCompositeTextures = true;
+		m_player->animatorValues.hasWalking = true;
+		m_player->animatorValues.hasRunning = false;
+
+		}
+		else
+		if (tokens[0] == "bulletTexture") {
+			AnimatorSprite tempASprtie;
+			tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[1]);
+
+			if (m_playerWeapon == nullptr) {
+				m_playerWeapon = new Weapon(m_player);
+			}
+
+			for (size_t i = 2; i < tokens.size(); i++)
+			{
+				if (std::atoi(tokens[i].c_str()) == -1) {
+					m_playerWeapon->setbulletAnimatorTex(tempASprtie);
+				}
+				else {
+					if (m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[i].c_str())]->getWeapon() == nullptr) {
+						m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[i].c_str())]->setWeapon(new Weapon(m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[i].c_str())]->getUnit()));
+					}
+					m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[i].c_str())]->getWeapon()->setbulletAnimatorTex(tempASprtie);
+				}
+			}
+
+
+	}
+	else
+	if (tokens[0] == "gearPiece") {
+		GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
+		placeGearOnMap(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale), tempGearPiece);
+	}else
+	if (tokens[0] == "worldTextureTile") {
+		sf::Texture* tempTexture = new sf::Texture();
+		tempTexture->loadFromFile(tokens[7]);
+		m_toDeleteTextures.push_back(tempTexture);
+		sf::Sprite tempSprite;
+		tempSprite.setTexture(*tempTexture);
+		if (std::atof(tokens[1].c_str()) < 0) {
+			tempSprite.setOrigin(sf::Vector2f(tempSprite.getLocalBounds().width / 2, tempSprite.getLocalBounds().height / 2));
+		}
+		else {
+			tempSprite.setOrigin(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())));
+		}
+
+		tempSprite.setPosition(sf::Vector2f(std::atof(tokens[3].c_str()), std::atof(tokens[4].c_str())));
+		tempSprite.setRotation(std::atof(tokens[5].c_str()));
+		tempSprite.scale(std::atof(tokens[6].c_str()) * m_levelScale, std::atof(tokens[6].c_str()) * m_levelScale);
+		m_worldTextures.push_back(tempSprite);
+	}
+	else if (tokens[0] == "loadLootTable") {
+		//loadLootTable(tokens[1]);
+	}
+	mutexLock.unlock();
 }
 
 void UnitManager::addHealthPotions(unsigned int amount)
@@ -190,7 +385,8 @@ bool UnitManager::subtractGold(int amount)
 bool UnitManager::removeGearPiece(std::string gearPieceName)
 {
 	mutexLock.lock();
-	bool retVal = m_gear.removeGearPiece(gearPieceName);
+	//bool retVal = m_gear.removeGearPiece(gearPieceName);
+	bool retVal = false;
 	mutexLock.unlock();
 	return retVal;
 }
@@ -199,7 +395,7 @@ void UnitManager::drinkPotion()
 {
 	mutexLock.lock();
 	if (m_healthPotions > 0) {
-		m_player->Dmodule->hitPoints += 100;
+		m_player->cModule.hitpoints += 100;
 		m_healthPotions--;
 	}
 	mutexLock.unlock();
@@ -231,86 +427,9 @@ void UnitManager::setProgressionFile(std::string fileName)
 	mutexLock.unlock();
 }
 
-
-void UnitManager::loadGearProgression()
-{
-	mutexLock.lock();
-	std::string line;
-	std::ifstream fileRead(m_progressionFileName);
-	if (fileRead.is_open()) {
-		while (getline(fileRead, line)) {
-			std::vector<std::string> tokens;
-
-			std::vector<AttackCard*> tempGearPieceAttackCards;
-			std::vector<DefenceCard*> tempGearPieceDefenceCards;
-
-			if (tokens.empty()) {
-				std::string delimiter = ";";
-
-				size_t pos = 0;
-				pos = line.find(delimiter);
-				while (pos != std::string::npos) {
-					tokens.push_back(line.substr(0, pos));
-					line.erase(0, pos + delimiter.length());
-					pos = line.find(delimiter);
-				}
-			}
-
-			if (tokens.empty()) {
-				continue;
-			}
-			else if (tokens[0] == "//") {
-				continue;
-			}
-
-			if (tokens[0] == "bag") {
-				m_healthPotions = std::atoi(tokens[1].c_str());
-				m_gold = std::atoi(tokens[2].c_str());
-			}
-
-			if (tokens[0] == "attackCard") {
-				AttackCard tempACard = AttackCard::makeAttackCard(tokens);
-				for (size_t i = AttackCard::maxFields; i < tokens.size(); i++)
-				{
-					std::vector<std::string> behaviour;
-
-					std::string delimiter = ",";
-
-					size_t pos = 0;
-					pos = tokens[i].find(delimiter);
-					while (pos != std::string::npos) {
-						behaviour.push_back(tokens[i].substr(0, pos));
-						tokens[i].erase(0, pos + delimiter.length());
-						pos = tokens[i].find(delimiter);
-					}
-					//tempACard.addBehaviour(behaviour);
-				}
-				m_gear.addCard(tempACard, tokens[1]);
-			}
-			else
-			if (tokens[0] == "defenceCard") {
-				//std::cout << tokens[11] << std::endl;
-				//system("pause");
-				DefenceCard tempDCard = DefenceCard::makeDefenceCard(tokens);
-				m_gear.addCard(tempDCard, tokens[1]);
-
-			}else
-			if (tokens[0] == "gearPiece") {
-				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				m_gear.addGearPiece(tempGearPiece);
-			}
-		}
-		fileRead.close();
-	}
-
-	assignPlayerGear(true);
-	mutexLock.unlock();
-}
-
 void UnitManager::saveGearProgression()
 {
 	mutexLock.lock();
-	m_gear.saveGearToFile(m_progressionFileName);
 	std::ofstream editFile(m_progressionFileName, std::ios::app);
 	editFile << "bag;" << m_healthPotions << ";" << m_gold << ";" << std::endl;
 	editFile.close();
@@ -330,7 +449,7 @@ Map* UnitManager::getMap() const
 void UnitManager::startLevel()
 {
 	mutexLock.lock();
-	assignPlayerGear();
+	//assignPlayerGear();
 	m_needsAnUpdate = true;
 	mutexLock.unlock();
 }
@@ -338,6 +457,7 @@ void UnitManager::startLevel()
 void UnitManager::endLevel()
 {
 	mutexLock.lock();
+	Animator::getInstance().clearNamedAnimatorSprites();
 	m_needsAnUpdate = false;
 	mutexLock.unlock();
 }
@@ -345,7 +465,7 @@ void UnitManager::endLevel()
 float UnitManager::getDistanceToPlayer(sf::Vector2f pos) const
 {
 	mutexLock.lock();
-	float retVal = distance(pos, m_player->getBody()[0].first);
+	float retVal = vectorDistance(pos, m_player->getBody()[0].first);
 	mutexLock.unlock();
 	return retVal;
 }
@@ -360,15 +480,28 @@ void UnitManager::addInteractable(Menu *menu, sf::Vector2f pos)
 	mutexLock.unlock();
 }
 
-Menu * UnitManager::interact()
+void UnitManager::addInteractable(const interactable &tempInteractable)
+{
+	m_interactables.push_back(tempInteractable);
+}
+
+Menu * UnitManager::interact(MessageBus *bus)
 {
 	mutexLock.lock();
 	for (size_t i = 0; i < m_interactables.size(); i++)
 	{
-		if (distance(m_interactables[i].position, m_player->getBody()[0].first) < m_interactDistance) {
+		if (vectorDistance(m_interactables[i].position, m_player->getBody()[0].first) < m_interactables[i].activationRadius) {
+			
+			if (m_interactables[i].isMessaging) {
+				MessageData* tempMessage = new MessageData();
+				tempMessage->createFrom(decomposedData().createFrom(m_interactables[i].sentMessage));
+				bus->addMessage(tempMessage);
+				mutexLock.unlock();
+				return nullptr;
+			}
             MarketMenu *tempMarketMenu = dynamic_cast<MarketMenu*>(m_interactables[i].menu);
             if(tempMarketMenu != nullptr){
-                tempMarketMenu->addToolTips(m_gear);
+                //tempMarketMenu->addToolTips(m_gear);
             }
 			mutexLock.unlock();
 			return m_interactables[i].menu;
@@ -447,7 +580,7 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window, MessageBus *
 
 	for (size_t i = 0; i < m_AIs.size(); i++)
 	{
-	    float tempDistance = distance(m_AIs[i]->getUnit()->getBody()[0].first, m_player->getBody()[0].first);
+	    float tempDistance = vectorDistance(m_AIs[i]->getUnit()->getBody()[0].first, m_player->getBody()[0].first);
 		if ( (tempDistance < renderDistance) && !m_AIs[i]->getUnit()->isDead) {
             if(minDistance > tempDistance){
                 m_closestAIUnit = m_AIs[i]->getUnit();
@@ -510,7 +643,7 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window, MessageBus *
 	std::list<Bullet*>::iterator it2;
 	for (it2 = playerWeaponBullets.begin(); it2 != playerWeaponBullets.end(); ++it2)
 	{
-		if (distance((*it2)->getBody()->getBody()[0].first, m_player->getBody()[0].first) < renderDistance) {
+		if (vectorDistance((*it2)->getBody()->getBody()[0].first, m_player->getBody()[0].first) < renderDistance) {
 			if (m_map->collides((*it2)->getBody())) {
 				(*it2)->onWallHit();
 			}
@@ -545,7 +678,7 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window, MessageBus *
 	if (m_showToolTips) {
 		for (size_t i = 0; i < m_toolTips.size(); i++)
 		{
-			if (m_toolTips[i].second && (distance(m_toolTips[i].first->getPosition(), m_player->getBody()[0].first) < toolTipReadDistance)) {
+			if (m_toolTips[i].second && (vectorDistance(m_toolTips[i].first->getPosition(), m_player->getBody()[0].first) < toolTipReadDistance)) {
 				Animator::getInstance().addOneFrameSprite(m_toolTips[i].first);
 			}
 		}
@@ -563,57 +696,6 @@ unsigned int UnitManager::addToolTip(ToolTip *toolTip)
 	size_t retVal = m_toolTips.size() - 1;
 	mutexLock.unlock();
 	return retVal;
-}
-
-void UnitManager::loadLootTable(std::string fileName)
-{
-	mutexLock.lock();
-	std::string line;
-	std::ifstream fileRead(fileName);
-	if (fileRead.is_open()) {
-		while (getline(fileRead, line)) {
-			std::vector<std::string> tokens;
-
-			if (tokens.empty()) {
-				std::string delimiter = ";";
-
-				size_t pos = 0;
-				pos = line.find(delimiter);
-				while (pos != std::string::npos) {
-					tokens.push_back(line.substr(0, pos));
-					line.erase(0, pos + delimiter.length());
-					pos = line.find(delimiter);
-				}
-			}
-
-			if (tokens.empty()) {
-				continue;
-			}
-			else if (tokens[0] == "//") {
-				continue;
-			}
-			if (tokens[0] == "attackCard") {
-				AttackCard tempACard = AttackCard::makeAttackCard(tokens);
-				m_lootTable[std::atoi(tokens[1].c_str())].first.aModule.attackCards.push_back(tempACard);
-
-			}
-			else
-			if (tokens[0] == "defenceCard") {
-				//std::cout << tokens[11] << std::endl;
-				//system("pause");
-				DefenceCard tempDCard = DefenceCard::makeDefenceCard(tokens);
-				m_lootTable[std::atoi(tokens[1].c_str())].first.dModule.defenceCards.push_back(tempDCard);
-
-			}
-			else if (tokens[0] == "gearPiece") {
-
-				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				m_lootTable.push_back(std::pair<GearPiece, unsigned int>(tempGearPiece, std::atoi(tokens.back().c_str())));
-			}
-		}
-		fileRead.close();
-	}
-	mutexLock.unlock();
 }
 
 Weapon * UnitManager::getWeapon()
@@ -651,9 +733,9 @@ void UnitManager::pickUpGear()
 		for (size_t i = 0; i < m_mapGearPieces.size(); i++)
 		{
 			//std::cout << "size of gear: " << m_mapGearPieces.size() << std::endl;
-			if (distance(m_mapGearPieces[i].first, m_player->getBody()[0].first) < m_pickUpDistance) {
+			if (vectorDistance(m_mapGearPieces[i].first, m_player->getBody()[0].first) < m_pickUpDistance) {
 				m_mapGearPieces[i].second.tex.rotation = 0;
-				addPlayerGear(m_mapGearPieces[i].second);
+				//addPlayerGear(m_mapGearPieces[i].second);
 				m_toolTips[m_itemToolTipID[m_mapGearPieces[i].second]].second = false;
 				m_mapGearPieces.erase(m_mapGearPieces.begin() + i);
 				break;
@@ -661,22 +743,6 @@ void UnitManager::pickUpGear()
 		}
 		m_itemPickupClock.restart();
 	}
-	mutexLock.unlock();
-}
-
-void UnitManager::assignPlayerGear(bool heal)
-{
-	mutexLock.lock();
-	m_gear.assignGear(m_player, heal);
-	mutexLock.unlock();
-	//std::cout << "bullet speed: " << m_player->Amodule->bulletSpeed << ", bullet duration: " << m_player->Amodule->bulletDuration << ", fire rate: " << m_player->Amodule->fireRate << std::endl;
-}
-
-void UnitManager::addPlayerGear(GearPiece gearPiece)
-{
-	mutexLock.lock();
-	m_gear.addGearPiece(gearPiece);
-	assignPlayerGear(gearPiece.healsOnPickup);
 	mutexLock.unlock();
 }
 
@@ -704,361 +770,6 @@ void UnitManager::setLevelScale(float val) {
 	mutexLock.unlock();
 }
 
-void UnitManager::createFromFile(std::string fileName)
-{
-	mutexLock.lock();
-	//m_map = new Map();
-	std::string line;
-	std::ifstream fileRead(fileName);
-	if (fileRead.is_open()) {
-		while (getline(fileRead, line)) {
-			std::vector<std::string> tokens;
-
-			std::string tempLine;
-
-			std::vector<AttackCard*> tempGearPieceAttackCards;
-			std::vector<DefenceCard*> tempGearPieceDefenceCards;
-
-			if (tokens.empty()) {
-				std::string delimiter = ";";
-
-				size_t pos = 0;
-				pos = line.find(delimiter);
-				while (pos != std::string::npos) {
-					tokens.push_back(line.substr(0, pos));
-					line.erase(0, pos + delimiter.length());
-					pos = line.find(delimiter);
-				}
-			}
-
-			if (tokens.empty()) {
-				continue;
-			}
-			else if (tokens[0] == "//") {
-				continue;
-			}
-
-
-			if (tokens[0] == "spawnPoint") {
-				constexpr unsigned int displacementScale = 1;
-				
-				unsigned int enemies = std::atoi(tokens[1].c_str());
-				std::vector<std::string> enemyFileName;
-				for (size_t i = 4; i < tokens.size(); i++)
-				{
-					enemyFileName.push_back(tokens[i]);
-				}
-
-				for (size_t i = 0; i < enemies; i++)
-				{
-					size_t lastEnemyUnits = m_AIs.size();
-					createFromFile(enemyFileName[rand() % enemyFileName.size()]);
-					for (size_t o = lastEnemyUnits; o < m_AIs.size(); o++)
-					{
-						//((rand() % (displacementScale * 10)) / displacementScale) * ((rand() % 2) ? -1 : 1)
-						const float microDisplacementX = (rand()%enemies);
-						const float microDisplacementY = (rand() % enemies);
-						m_AIs[o]->getUnit()->move(sf::Vector2f((std::atof(tokens[2].c_str())*m_levelScale)+microDisplacementX,(std::atof(tokens[3].c_str())*m_levelScale)+ microDisplacementY));
-						for (size_t p = 0; p < m_AIs.size(); p++) {
-							m_AIs[o]->getUnit()->collideOne(m_AIs[p]->getUnit());
-						}
-						
-					}
-				}
-				while (false) {
-					//std::cout << m_AIs.size() << std::endl;
-				}
-				
-			}
-
-			if (tokens[0] == "scaleFactor") {
-				m_levelScale = std::atof(tokens[1].c_str());
-			}
-
-			if (tokens[0] == "wall") {
-				//std::cout << tokens.size() << std::endl;
-				//system("pause");
-				m_map->addWall(sf::Vector2f(std::atof(tokens[1].c_str()) * m_levelScale, std::atof(tokens[2].c_str()) * m_levelScale) , (sf::Vector2f(std::atof(tokens[3].c_str())*m_levelScale, std::atof(tokens[4].c_str())*m_levelScale)));
-			}else
-			if (tokens[0] == "unit") {
-				EnemyAI *tempAI = new EnemyAI();
-                std::vector<std::pair<sf::Vector2f, float>> unitBody;
-				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str()))*m_levelScale, std::atof(tokens[3].c_str())));
-				unit *tempUnit = new unit(unitBody);
-				tempUnit->typeOfUnit = defaultType;
-				tempUnit->setWeight(std::atof(tokens[4].c_str()));
-
-				tempAI->setUnit(tempUnit);
-				m_AIs.push_back(tempAI);
-				if (tokens.size() > 5) {
-					AnimatorSprite tempASprtie;
-					tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[5]);
-
-					tempAI->getUnit()->setAnimatorSprite(tempASprtie);
-				}
-				if(tokens.size() > 6){
-                    tempAI->createFromFile(tokens[6]);
-				}
-				if(tokens.size() > 7){
-                    tempAI->setHead(m_AIs[(m_AIs.size() -1) - std::atoi(tokens[7].c_str())]->getUnit(), sf::Vector2f(std::atof(tokens[8].c_str()), std::atof(tokens[9].c_str())));
-				}
-
-			}
-			else if (tokens[0] == "tooltip") {
-				ToolTip *toolTip = new ToolTip();
-				AnimatorSprite tempASprite;
-				if (tokens[1] == "") {
-					tempASprite.isActive = false;
-				}
-				else {
-					tempASprite.textureID = Animator::getInstance().getTextureID(tokens[1]);
-				}
-				
-				toolTip->setTexture(tempASprite);
-				toolTip->setPosition(sf::Vector2f(std::atof(tokens[2].c_str())*m_levelScale, std::atof(tokens[3].c_str())*m_levelScale));
-				toolTip->setScale(std::atof(tokens[4].c_str()));
-				sf::Text tempTooltipText;
-				tempTooltipText.setFont(*ToolTip::getFont());
-				tempTooltipText.setString(tokens[5]);
-				tempTooltipText.setScale(sf::Vector2f(0.1,0.1));
-				tempTooltipText.setFillColor(sf::Color::Green);
-				toolTip->addText(tempTooltipText);
-				addToolTip(toolTip);
-
-			}
-			else
-			if (tokens[0] == "player") {
-				std::vector<std::pair<sf::Vector2f, float>> unitBody;
-				unitBody.push_back(std::pair<sf::Vector2f, float>(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str())*m_levelScale), std::atof(tokens[3].c_str())));
-				m_player = new unit(unitBody);
-				m_player->typeOfUnit = playerType;
-				m_player->setWeight(std::atof(tokens[4].c_str()));
-				if (tokens.size() > 5) {
-					AnimatorSprite tempASprtie;
-					tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[5]);
-
-					m_player->setAnimatorSprite(tempASprtie);
-				}
-				m_player->animatorValues.back_left_idle.textureID = Animator::getInstance().getTextureID("player_back_left_idle.png");
-				m_player->animatorValues.back_left_idle.drawLayer = 2;
-				m_player->animatorValues.back_right_idle.textureID = Animator::getInstance().getTextureID("player_back_right_idle.png");
-				m_player->animatorValues.back_right_idle.drawLayer = 2;
-				m_player->animatorValues.front_left_idle.textureID = Animator::getInstance().getTextureID("player_front_left_idle.png");
-				m_player->animatorValues.front_left_idle.drawLayer = 2;
-				m_player->animatorValues.front_right_idle.textureID = Animator::getInstance().getTextureID("player_front_right_idle.png");
-				m_player->animatorValues.front_right_idle.drawLayer = 2;
-				m_player->animatorValues.front_right_walking = Animator::getInstance().getAnimationPresetID("player_front_right_walk");
-				m_player->animatorValues.front_left_walking = Animator::getInstance().getAnimationPresetID("player_front_left_walk");
-				m_player->animatorValues.back_right_walking = Animator::getInstance().getAnimationPresetID("player_back_right_walk");
-				m_player->animatorValues.back_left_walking = Animator::getInstance().getAnimationPresetID("player_back_left_walk");
-				m_player->animatorValues.usingCompositeTextures = true;
-				m_player->animatorValues.hasWalking = true;
-				m_player->animatorValues.hasRunning = false;
-
-			}else
-			if (tokens[0] == "bulletTexture") {
-				AnimatorSprite tempASprtie;
-				tempASprtie.textureID = Animator::getInstance().getTextureID(tokens[1]);
-
-				for (size_t i = 2; i < tokens.size(); i++)
-				{
-					if (std::atoi(tokens[i].c_str()) == -1) {
-						m_playerWeapon->setbulletAnimatorTex(tempASprtie);
-					}
-					else {
-						m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[i].c_str())]->getWeapon()->setbulletAnimatorTex(tempASprtie);
-					}
-				}
-
-
-			}
-			else
-			if (tokens[0] == "gear") {
-				unit *tempUnit;
-				if (std::atoi(tokens[1].c_str()) == -1) {
-					tempUnit = m_player;
-				}
-				else {
-					tempUnit = m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->getUnit();
-				}
-
-				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				tempGearPiece.dModule.hitPoints = tempGearPiece.dModule.hitPoinCap;
-
-				tempUnit->Dmodule = new DefenceModule(tempGearPiece.dModule);
-				tempUnit->Amodule = new AttackModule(tempGearPiece.aModule);
-
-				if(std::atoi(tokens[1].c_str()) == -1) {
-					m_playerWeapon = new Weapon(tempUnit);
-				}else{
-					m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->setWeapon(new Weapon(tempUnit));
-				}
-
-
-				for (size_t i = GearPiece::maxFields; i < tokens.size(); i++)
-				{
-					std::vector<std::string> behaviour;
-
-					std::string delimiter = ",";
-
-					size_t pos = 0;
-					pos = tokens[i].find(delimiter);
-					while (pos != std::string::npos) {
-						behaviour.push_back(tokens[i].substr(0, pos));
-						tokens[i].erase(0, pos + delimiter.length());
-						pos = tokens[i].find(delimiter);
-					}
-
-					if (behaviour.empty()) {
-						continue;
-					}
-
-					if (behaviour[0] == "addList") {
-						for (size_t i = 1; i < behaviour.size(); i++)
-						{
-							if (std::atoi(behaviour[i].c_str()) == -1) {
-								tempUnit = m_player;
-							}
-							else {
-								tempUnit = m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->getUnit();
-							}
-
-							tempUnit->Dmodule = new DefenceModule(tempGearPiece.dModule);
-							tempUnit->Amodule = new AttackModule(tempGearPiece.aModule);
-
-
-							if (std::atoi(behaviour[i].c_str()) == -1) {
-								m_playerWeapon = new Weapon(tempUnit);
-							}
-							else {
-								m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->setWeapon(new Weapon(tempUnit));
-							}
-						}
-					}
-				}
-
-
-			}else
-			if (tokens[0] == "attackCard") {
-				AttackCard tempACard = AttackCard::makeAttackCard(tokens);
-				for (size_t i = AttackCard::maxFields; i < tokens.size(); i++)
-				{
-					std::vector<std::string> behaviour;
-
-					std::string delimiter = ",";
-
-					size_t pos = 0;
-					pos = tokens[i].find(delimiter);
-					while (pos != std::string::npos) {
-						behaviour.push_back(tokens[i].substr(0, pos));
-						tokens[i].erase(0, pos + delimiter.length());
-						pos = tokens[i].find(delimiter);
-					}
-
-					if (behaviour[0] == "addList") {
-						for (size_t i = 1; i < behaviour.size(); i++)
-						{
-							if (std::atoi(behaviour[i].c_str()) == -1) {
-								m_player->Amodule->attackCards.push_back(tempACard);
-							}
-							else if (std::atoi(behaviour[i].c_str()) < -1) {
-								int tempIndex = abs(std::atoi(behaviour[i].c_str())) - 2;
-								m_mapGearPieces[tempIndex].second.aModule.attackCards.push_back(tempACard);
-							}
-							else {
-								m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->getUnit()->Amodule->attackCards.push_back(tempACard);
-							}
-						}
-					}
-				}
-				if (std::atoi(tokens[1].c_str()) == -1) {
-					m_player->Amodule->attackCards.push_back(tempACard);
-				}
-				else if (std::atoi(tokens[1].c_str()) < -1) {
-					m_mapGearPieces[abs(std::atoi(tokens[1].c_str()))-2].second.aModule.attackCards.push_back(tempACard);
-				}
-				else {
-					m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->getUnit()->Amodule->attackCards.push_back(tempACard);
-				}
-
-			}else
-			if (tokens[0] == "defenceCard") {
-				//std::cout << tokens[11] << std::endl;
-				//system("pause");
-				DefenceCard tempDCard = DefenceCard::makeDefenceCard(tokens);
-				for (size_t i = DefenceCard::maxFields; i < tokens.size(); i++)
-				{
-					std::vector<std::string> behaviour;
-
-					std::string delimiter = ",";
-
-					size_t pos = 0;
-					pos = tokens[i].find(delimiter);
-					while (pos != std::string::npos) {
-						behaviour.push_back(tokens[i].substr(0, pos));
-						tokens[i].erase(0, pos + delimiter.length());
-						pos = tokens[i].find(delimiter);
-					}
-
-					if (behaviour[0] == "addList") {
-						for (size_t i = 1; i < behaviour.size(); i++)
-						{
-							if (std::atoi(behaviour[i].c_str()) == -1) {
-								m_player->Dmodule->defenceCards.push_back(tempDCard);
-							}
-							else if (std::atoi(behaviour[i].c_str()) < -1) {
-								m_mapGearPieces[abs(std::atoi(behaviour[i].c_str()))-2].second.dModule.defenceCards.push_back(tempDCard);
-							}
-							else {
-								m_AIs[(m_AIs.size() - 1) - std::atoi(behaviour[i].c_str())]->getUnit()->Dmodule->defenceCards.push_back(tempDCard);
-							}
-						}
-					}
-				}
-				if (std::atoi(tokens[1].c_str()) == -1) {
-					m_player->Dmodule->defenceCards.push_back(tempDCard);
-				}
-				else if (std::atoi(tokens[1].c_str()) < -1) {
-					m_mapGearPieces[abs(std::atoi(tokens[1].c_str()))-2].second.dModule.defenceCards.push_back(tempDCard);
-				}
-				else {
-					m_AIs[(m_AIs.size() - 1) - std::atoi(tokens[1].c_str())]->getUnit()->Dmodule->defenceCards.push_back(tempDCard);
-				}
-
-			}else
-			if (tokens[0] == "gearPiece") {
-
-				GearPiece tempGearPiece = GearPiece::makeGearPiece(tokens);
-				placeGearOnMap(sf::Vector2f(std::atof(tokens[1].c_str())*m_levelScale, std::atof(tokens[2].c_str())* m_levelScale), tempGearPiece);
-			}else
-			if (tokens[0] == "worldTextureTile") {
-				sf::Texture *tempTexture = new sf::Texture();
-				tempTexture->loadFromFile(tokens[7]);
-				m_toDeleteTextures.push_back(tempTexture);
-				sf::Sprite tempSprite;
-				tempSprite.setTexture(*tempTexture);
-				if (std::atof(tokens[1].c_str())< 0) {
-					tempSprite.setOrigin(sf::Vector2f(tempSprite.getLocalBounds().width/2, tempSprite.getLocalBounds().height/2));
-				}
-				else {
-					tempSprite.setOrigin(sf::Vector2f(std::atof(tokens[1].c_str()), std::atof(tokens[2].c_str())));
-				}
-
-				tempSprite.setPosition(sf::Vector2f(std::atof(tokens[3].c_str()), std::atof(tokens[4].c_str())));
-				tempSprite.setRotation(std::atof(tokens[5].c_str()));
-				tempSprite.scale(std::atof(tokens[6].c_str())*m_levelScale, std::atof(tokens[6].c_str())*m_levelScale);
-				m_worldTextures.push_back(tempSprite);
-			}
-			else if (tokens[0] == "loadLootTable") {
-				loadLootTable(tokens[1]);
-			}
-		}
-		fileRead.close();
-		//m_player->getTexture().setTexture();
-	}
-	mutexLock.unlock();
-}
-
 UnitManager::~UnitManager()
 {
 	mutexLock.lock();
@@ -1067,21 +778,16 @@ UnitManager::~UnitManager()
 	{
 		delete m_AIs[i];
 	}
-	for (size_t i = 0; i < m_toDeleteACards.size(); i++)
-	{
-		delete m_toDeleteACards[i];
-	}
-	for (size_t i = 0; i < m_toDeleteDCards.size(); i++)
-	{
-		delete m_toDeleteDCards[i];
-	}
 	for (size_t i = 0; i < m_toDeleteTextures.size(); i++)
 	{
 		delete m_toDeleteTextures[i];
 	}
 	for (size_t i = 0; i < m_interactables.size(); i++)
 	{
-		delete m_interactables[i].menu;
+		if (m_interactables[i].menu != nullptr) {
+			delete m_interactables[i].menu;
+		}
+		
 	}
 	for (size_t i = 0; i < m_toolTips.size(); i++)
 	{

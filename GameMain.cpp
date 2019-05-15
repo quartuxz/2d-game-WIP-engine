@@ -5,6 +5,8 @@
 #include "ToolTip.h"
 #include "Serializable.h"
 
+
+
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
@@ -62,6 +64,7 @@ void HUDMenu::update(updateEvent uEvent)
 }
 
 void GameMain::m_loadLevelGameMainBits(std::string fileName) {
+
 	std::string line;
 	std::ifstream fileRead(fileName);
 	if (fileRead.is_open()) {
@@ -69,9 +72,6 @@ void GameMain::m_loadLevelGameMainBits(std::string fileName) {
 			std::vector<std::string> tokens;
 
 			std::string tempLine;
-
-			std::vector<AttackCard*> tempGearPieceAttackCards;
-			std::vector<DefenceCard*> tempGearPieceDefenceCards;
 
 			if (tokens.empty()) {
 				std::string delimiter = ";";
@@ -91,16 +91,16 @@ void GameMain::m_loadLevelGameMainBits(std::string fileName) {
 			else if (tokens[0] == "//") {
 				continue;
 			}
-			if (tokens[0] == "interactable") {
+			else if (tokens[0] == "interactable") {
 				if (tokens[1] == "market") {
 					MarketMenu* tempMarketMenu = new MarketMenu(&m_window);
-					tempMarketMenu->addToolTips(m_currentLevel->getGear());
 					tempMarketMenu->createStaticMenuLayout();
-					m_currentLevel->addInteractable(tempMarketMenu, sf::Vector2f(std::atof(tokens[2].c_str()), std::atof(tokens[3].c_str())));
+					m_currentLevel->addInteractable(tempMarketMenu, sf::Vector2f(std::atof(tokens[2].c_str()) * m_currentLevel->getLevelScale(), std::atof(tokens[3].c_str()) * m_currentLevel->getLevelScale()));
 				}
+				
 
 			}
-			if (tokens[0] == "gameScript") {
+			else if (tokens[0] == "gameScript") {
 				GameScript* tempMC = new GameScript();
 				tempMC->createFromFile(tokens[1]);
 				m_gameBus.addMessagingComponent(tempMC, true);
@@ -115,9 +115,14 @@ void GameMain::m_setActiveLevel()
 	m_gameBus = MessageBus();
 	m_gameBus.addMessagingComponent(this);
 	m_gameBus.addMessagingComponent(&m_gameLogger);
+
+	m_currentLevel->endLevel();
+	delete m_currentLevel;
+	m_currentLevel = new UnitManager();
+
 	m_currentLevel->createFromFile(m_gameLevels[m_activeLevel]);
 	m_currentLevel->setProgressionFile(m_progressionFile);
-	m_currentLevel->loadGearProgression();
+	//m_currentLevel->loadGearProgression();
 	m_loadLevelGameMainBits(m_gameLevels[m_activeLevel]);
 
 	MessageData *mData = new MessageData();
@@ -125,13 +130,28 @@ void GameMain::m_setActiveLevel()
 	mData->messageContents.push_back(decomposedData().setName("activeLevelName").setType("std::string").addData(m_gameLevels[m_activeLevel])
 		.addChildrenObject(decomposedData().setType("float").setName("levelScale").addData(ma_serialize(m_currentLevel->getLevelScale()))));
 	m_gameBus.addMessage(mData);
-   
+	//m_currentLevel->getPlayer()->cModule.isMelee = false;
 }
 
 void GameMain::spawnWindow(std::string fontFile)
 {
 	m_window.create(sf::VideoMode(1200, 1000), "SFML works!");
 	m_window.setFramerateLimit(60);
+	m_gameMenus["inventory"] = new PlayerInventory(&m_window);
+	m_gameMenus["inventory"]->createStaticMenuLayout();
+	GearPiece tempGearPiece;
+	tempGearPiece.cModule = combatModule(true);
+	tempGearPiece.cModule.moveSpeed = 500;
+	AnimatorSprite gearASprite;
+	gearASprite.textureID = Animator::getInstance().getTextureID("chestpiece.png");
+	tempGearPiece.tex = gearASprite;
+	tempGearPiece.type = chestPiece;
+	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addItemToInventory(tempGearPiece);
+	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addAmmo(10);
+	gearASprite.textureID = Animator::getInstance().getTextureID("player.png");
+	tempGearPiece.tex = gearASprite;
+	tempGearPiece.cModule.moveSpeed = -100;
+	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addItemToInventory(tempGearPiece);
 	//Animator::getInstance().setWindow(&m_window);
 	//Animator::getInstance().addTexture("player.png");
 	m_gameMenus["HUD"] = new HUDMenu(&m_window);
@@ -148,12 +168,14 @@ void GameMain::startLevel(unsigned int activeLevel)
 	mData->messageContents.push_back(decomposedData().setName("activeLevelName").setType("string").addData(m_gameLevels[m_activeLevel]));
 	m_gameBus.addMessage(mData);
 
+
+
 	m_activeLevel = activeLevel;
 	m_setActiveLevel();
 	MarketMenu *tempMenu = new MarketMenu(&m_window);
-    tempMenu->addToolTips(m_currentLevel->getGear());
 	tempMenu->createStaticMenuLayout();
 	m_currentLevel->addInteractable(tempMenu, sf::Vector2f(0,0));
+	m_currentLevel->startLevel();
 }
 
 void GameMain::m_create(std::vector<std::string> gameLevels)
@@ -260,7 +282,7 @@ void GameMain::onProgramEnd()
 	m_gameBus.notify();
 	m_gameBus.onDestroy();
 
-	m_currentLevel->saveGearProgression();
+	//m_currentLevel->saveGearProgression();
 	Animator::getInstance().draw();
 	m_window.close();
 }
@@ -270,12 +292,13 @@ void GameMain::setProgressionFile(std::string fileName)
 	m_progressionFile = fileName;
 }
 
-
+//TODO: fix possible crashes with namedWalls
 void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * bus) {
 	//std::cout << tempMessage.messageContents[0].name << std::endl;
 
 	if (tempMessage.messageType == "editNamedWall") {
 		Map* currentLevelmap = m_currentLevel->getMap();
+		
 		currentLevelmap->getWalls()->operator[](currentLevelmap->getWallNames()[tempMessage.messageContents[0].data[0]]).isActive = ma_deserialize_uint(tempMessage.messageContents[0].data[1]);
 	}
 	else if(tempMessage.messageType == "addNamedWall"){
@@ -286,8 +309,8 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 	}
 
 
-	else if (tempMessage.messageType == "editUniqueSprites") {
-		auto tempAnimatorSprites = Animator::getInstance().getUnqiueAnimatorSprites();
+	else if (tempMessage.messageType == "editNamedAnimatorSprite") {
+		auto tempAnimatorSprites = Animator::getInstance().getNamedAnimatorSprites();
 		auto mapItr = tempAnimatorSprites->find(tempMessage.messageContents[0].data[0]);
 		AnimatorSprite tempASprite;
 		if (mapItr != tempAnimatorSprites->end()) {
@@ -306,7 +329,7 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 			tempASprite.position = sf::Vector2f(std::atof(tempMessage.messageContents[0].childrenObjects[0].data[3].c_str()), std::atof(tempMessage.messageContents[0].childrenObjects[0].data[4].c_str()));
 		}
 		
-		tempAnimatorSprites->operator[](tempMessage.messageContents[0].data[0]) = tempASprite;
+		tempAnimatorSprites->operator[](tempMessage.messageContents[0].data[0]) = std::move(tempASprite);
 
 	}
 	else if (tempMessage.messageType == "requestUniqueIDs") {
@@ -333,11 +356,13 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 		m_currentLevel->createFromFile(tempMessage.messageContents[0].data[0]);
 	}
 	else if (tempMessage.messageType == "openMenu") {
-		Menu *tempMenu = new Menu(&m_window);
-		tempMenu->createMenuFromFile(tempMessage.messageContents[0].data[0]);
-		m_activeMenu = tempMessage.messageContents[0].data[1];
-		delete m_gameMenus[m_activeMenu];
-		m_gameMenus[m_activeMenu] = tempMenu;
+		if (tempMessage.messageContents[0].data[1] != "inventory") {
+			Menu* tempMenu = new Menu(&m_window);
+			tempMenu->createMenuFromFile(tempMessage.messageContents[0].data[0]);
+			m_activeMenu = tempMessage.messageContents[0].data[1];
+			delete m_gameMenus[m_activeMenu];
+			m_gameMenus[m_activeMenu] = tempMenu;
+		}
 	}
 
 	 else if (tempMessage.messageType == "displayDecal") {
@@ -363,14 +388,13 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 		}
 		tempEffect.amount = std::atof(tempMessage.messageContents[0].data[1].c_str());
 		tempEffect.duration = std::atof(tempMessage.messageContents[0].data[2].c_str());
-		m_currentLevel->getPlayer()->Dmodule->effects.push_back(tempEffect);
+		m_currentLevel->getPlayer()->cModule.effects.push_back(tempEffect);
 	}
 }
 
 void GameMain::gameLoop()
 {
 	MarketMenu tempMenu =  MarketMenu(&m_window);
-	tempMenu.addToolTips(m_currentLevel->getGear());
 	tempMenu.createStaticMenuLayout();
 	m_window.setFramerateLimit(120);
 
@@ -461,7 +485,7 @@ void GameMain::gameLoop()
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
 			//std::cout << "gearPickedUP!" << std::endl;
 			
-			m_currentLevel->pickUpGear();
+			//m_currentLevel->pickUpGear();
 		}
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
 		    unit *tempUnit = m_currentLevel->getClosestAIUnit();
@@ -473,12 +497,12 @@ void GameMain::gameLoop()
 		
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) && lastDash >= 2) {
 			lastDash = 0;
-			skillParam tempSParam;
-			tempSParam.sType = dash;
-			tempSParam.castDelay = 0;
-			tempSParam.dirUnitVec = mouseUnitVec;
-			tempSParam.staminaCost = 50;
-			m_currentLevel->getWeapon()->useSkill(tempSParam);
+			skillParam *tempSParam = new skillParam();
+			tempSParam->sType = dash;
+			tempSParam->castDelay = 0;
+			tempSParam->dirUnitVec = mouseUnitVec;
+			tempSParam->staminaCost = 50;
+			m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
 		}
 
 		else
@@ -489,7 +513,20 @@ void GameMain::gameLoop()
 
 		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
 			//UnitManagerSingleton::getInstance().requestUpdate();
-			m_currentLevel->getWeapon()->fire(mouseUnitVec);
+			if (!m_isPaused) {
+				if (m_currentLevel->getPlayer()->cModule.isMelee) {
+					m_currentLevel->getWeapon()->fire(sf::Vector2f(mousePosition)+m_viewDisplacement);
+				}
+				else {
+					if (m_currentLevel->getWeapon()->fire(mouseUnitVec)) {
+						dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->removeAmmo(1);
+					}
+				}
+				
+			}
+			
+
+			
 			mouseClick = true;
 		}
 
@@ -512,7 +549,7 @@ void GameMain::gameLoop()
 					//playerData->messageContents.push_back();
 					m_gameBus.addMessage(playerData);
 
-					m_currentLevel->pickUpGear();
+					//m_currentLevel->pickUpGear();
 				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
 					if (m_activeMenu != "mainMenu") {
 						screenShot.update(m_window);
@@ -527,12 +564,16 @@ void GameMain::gameLoop()
 				
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab)) {
 					if (m_activeMenu != "inventory") {
+						screenShot.update(m_window);
 						m_activeMenu = "inventory";
+					}
+					else {
+						m_activeMenu = "";
 					}
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
 					if (m_activeMenu != "mainMenu") {
-						Menu *tempMenu = m_currentLevel->interact();
+						Menu *tempMenu = m_currentLevel->interact(&m_gameBus);
 						if (tempMenu != nullptr) {
 							if (m_activeMenu == "interactable") {
 								m_activeMenu = "";
@@ -621,8 +662,8 @@ void GameMain::gameLoop()
 void GameMain::updateUI(std::string UIName, sf::Vector2i mousePos, bool mouseClicked){
     updateEvent tempEvent;
     tempEvent.updateEventType = lostLife;
-    tempEvent.currentLife = m_currentLevel->getPlayer()->Dmodule->hitPoints;
-    tempEvent.maxLife = m_currentLevel->getPlayer()->Dmodule->hitPoinCap;
+    tempEvent.currentLife = m_currentLevel->getPlayer()->cModule.hitpoints;
+    tempEvent.maxLife = m_currentLevel->getPlayer()->cModule.hitpointCap;
     m_gameMenus[UIName]->update(tempEvent);
     tempEvent.updateEventType = lostPotions;
     tempEvent.availablePotions = m_currentLevel->getHealthPotions();
@@ -656,12 +697,12 @@ void GameMain::updateUI(std::string UIName, sf::Vector2i mousePos, bool mouseCli
             }
             break;
         case removesGearPiece:
-            if (mouseClicked) {
-                if (m_currentLevel->removeGearPiece(tempBehaviourParam[i].gearPieceRemoved)) {
-                    m_currentLevel->addGold(tempBehaviourParam[i].goldCost);
-                    m_currentLevel->assignPlayerGear(false);
-                }
-            }
+			tempBehaviourParam[i].gearPiece.unequipGearPiece(&m_currentLevel->getPlayer()->cModule);
+			std::cout << "unequips:" << tempBehaviourParam[i].gearPiece.cModule.moveSpeed << std::endl;
+			break;
+		case equipsGearPiece:
+			tempBehaviourParam[i].gearPiece.equipGearPiece(&m_currentLevel->getPlayer()->cModule);
+			std::cout << "equips:" << tempBehaviourParam[i].gearPiece.cModule.moveSpeed << std::endl;
 			break;
         default:
             break;

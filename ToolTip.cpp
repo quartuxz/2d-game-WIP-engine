@@ -25,7 +25,7 @@ void ToolTip::setPosition(sf::Vector2f pos)
 	m_position = pos;
 }
 
-void ToolTip::setTexture(AnimatorSprite aSprite)
+void ToolTip::setTexture(const AnimatorSprite& aSprite)
 {
 	m_backgroundImage = aSprite;
 }
@@ -70,17 +70,17 @@ AnimatorSprite ToolTip::getTexture() const
 	return m_backgroundImage;
 }
 
-void ToolTip::makeTooltipForGear(GearPiece gearPiece)
+void ToolTip::makeTooltipForGear(const GearPiece& gearPiece)
 {
 	std::stringstream ss;
-	ss << "->" << gearPiece.type << std::endl << "HP: " << gearPiece.dModule.hitPoinCap << std::endl << "Move Speed: " << gearPiece.dModule.moveSpeed << std::endl
-	   << "fire rate: " << gearPiece.aModule.fireRate << std::endl
-	   << "inaccuracy: " << gearPiece.aModule.inaccuracy << std::endl
-	   << "bullet speed: " << gearPiece.aModule.bulletSpeed << std::endl
-	   << "bullet duration: " << gearPiece.aModule.bulletDuration << std::endl
-	   << "bullet size: " << gearPiece.aModule.bulletSize << std::endl
-	   << "magazine size: " << gearPiece.aModule.magSize << std::endl
-	   << "reload time(s): " << gearPiece.aModule.reloadTime << std::endl
+	ss << "->" << gearPiece.type << std::endl << "HP: " << gearPiece.cModule.hitpointCap << std::endl << "Move Speed: " << gearPiece.cModule.moveSpeed << std::endl
+	   << "fire rate: " << gearPiece.cModule.fireRate << std::endl
+	   << "inaccuracy: " << gearPiece.cModule.inaccuracy << std::endl
+	   << "bullet speed: " << gearPiece.cModule.bulletSpeed << std::endl
+	   << "bullet duration: " << gearPiece.cModule.bulletDuration << std::endl
+	   << "bullet size: " << gearPiece.cModule.bulletSize << std::endl
+	   << "magazine size: " << gearPiece.cModule.magSize << std::endl
+	   << "reload time(s): " << gearPiece.cModule.reloadTime << std::endl
 	   << "gold value: " << gearPiece.goldValue << std::endl;
 	sf::Text tempText;
 	tempText.setFont(*getFont());

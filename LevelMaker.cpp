@@ -26,8 +26,6 @@ void LevelMaker::levelMakerLoop(std::string outputFile, std::string mapTexFile) 
 
 			std::string tempLine;
 
-			std::vector<AttackCard*> tempGearPieceAttackCards;
-			std::vector<DefenceCard*> tempGearPieceDefenceCards;
 
 			if (tokens.empty()) {
 				std::string delimiter = ";";

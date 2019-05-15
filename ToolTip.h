@@ -30,7 +30,7 @@ public:
 		
 	}
 
-	void setTexture(AnimatorSprite);
+	void setTexture(const AnimatorSprite&);
 
 	float getScale()const;
 	sf::Vector2f getPosition()const;
@@ -41,7 +41,7 @@ public:
 	void clearText();
 	AnimatorSprite getTexture()const;
 
-	void makeTooltipForGear(GearPiece);
+	void makeTooltipForGear(const GearPiece&);
 
 	void draw(sf::RenderWindow&);
 	~ToolTip();

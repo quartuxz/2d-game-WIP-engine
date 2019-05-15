@@ -7,17 +7,19 @@
 #include "Bullet.h"
 
 enum failCastTypes {
-	outOfStamina, outOfMana, notFail
+	notFail, outOfStamina, outOfPsiPoints, outOfMeleeRange
 };
 
 enum skillTypes {
-	dash
+	dash, meleeAttack, circularDamage
 };
 
 struct skillParam {
 	float castDelay = 0;
 	sf::Vector2f dirUnitVec;
 	skillTypes sType;
+	std::vector<sf::Vector2f> skillEffecArea = std::vector<sf::Vector2f>();
+	float maxRange = 1000;
 	float strenght = 3;
 	float manaCost = 0;
 	float staminaCost = 0;
@@ -32,6 +34,8 @@ private:
 
 	AnimatorSprite m_bulletATex;
 
+	std::queue<skillParam*> m_activeSkills;
+
 	std::list<Bullet*> m_bullets;
 	unit *m_wieldingUnit;
 	float m_fireRate = 5;
@@ -40,6 +44,9 @@ private:
     unsigned int m_magBulletsUsed = 0;
 
 	void m_fire(sf::Vector2f);
+
+
+	void m_useSkill(skillParam*, std::vector<unit*>);
 
 	float m_accumulatedFireTime = 0;
 public:
@@ -55,9 +62,10 @@ public:
 
 	Weapon(unit*);
 
-	void fire(sf::Vector2f);
+	bool fire(sf::Vector2f);
 
-	failCastTypes useSkill(skillParam);
+
+	failCastTypes addSkillToQueue(skillParam*);
 
 	std::vector<unsigned int> update(float, std::vector<unit*>);
 	std::vector<unsigned int> update(float, std::queue<unit*>);

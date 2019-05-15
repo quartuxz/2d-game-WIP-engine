@@ -4,11 +4,6 @@
 #include <math.h>
 #include "unit.h"
 
-float length_squared(sf::Vector2f v, sf::Vector2f w);
-
-
-float dot(sf::Vector2f v, sf::Vector2f w);
-
 float minimum_distance(sf::Vector2f v, sf::Vector2f w, sf::Vector2f p, sf::Vector2f *proj);
 
 sf::Vector2f reflect(sf::Vector2f v, sf::Vector2f w, sf::Vector2f p);

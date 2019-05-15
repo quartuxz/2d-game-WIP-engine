@@ -27,7 +27,7 @@ private:
 
 	sf::RenderWindow *m_window;
 
-	std::map<std::string, AnimatorSprite> m_uniqueAnimatorSprites;
+	std::map<std::string, AnimatorSprite> m_namedAnimatorSprites;
 
 	std::vector<std::stack<sf::Sprite>> m_spritesToDraw;
 	std::vector<ToolTip*> m_toolTipsToDraw;
@@ -90,7 +90,10 @@ public:
 	//pass the ID of the texture you wish to instanciate, together with the position you want to draw it on, its draw layer and its scale
 	void addOneFrameSprite(const AnimatorSprite &);
 
-	std::map<std::string, AnimatorSprite> *getUnqiueAnimatorSprites();
+	// clear all the namedAnimatorSprites for when passing to the enxt level
+	void clearNamedAnimatorSprites();
+	// named sprites for runtime editing
+	std::map<std::string, AnimatorSprite> *getNamedAnimatorSprites();
 
 	void addOneFrameSprite(ToolTip*);
 
@@ -112,7 +115,7 @@ public:
 	void playAnimation(unsigned int, AnimatorSprite*);
 
 	std::queue<AnimatorSprite> getAnimationPreset(unsigned int);
-	//not working rn
+	//not working right now
 	AnimatorSprite *playAndGetAnimationState(unsigned int);
 
 	unsigned int getAnimationPresetID(std::string);

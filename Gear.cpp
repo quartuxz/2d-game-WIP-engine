@@ -3,180 +3,140 @@
 #include "Animator.h"
 
 
-Gear::Gear()
+void combatModule::createFrom(const decomposedData&)
 {
 }
 
-void Gear::addCard(AttackCard aCard, std::string gearPieceName)
+decomposedData combatModule::serialize()
 {
-	m_gearItems[gearPieceName].aModule.attackCards.push_back(aCard);
+	decomposedData tempDData;
+	tempDData.type = "combatModule";
+	return tempDData;
 }
 
-void Gear::addCard(DefenceCard dCard, std::string gearPieceName)
+void combatModule::attack(combatModule *cModule)
 {
-	m_gearItems[gearPieceName].dModule.defenceCards.push_back(dCard);
+	cModule->hitpoints -= damage;
 }
 
-void Gear::saveGearToFile(std::string fileName)
+combatModule::combatModule(bool initToZero): Serializable()
 {
-	std::ofstream editFile(fileName, std::ios::trunc);
+	hitpoints = 0;
+	hitpointCap = 0;
+	psiPoints = 0;
+	psiPointCap = 0;
+	stamina = 0;
+	staminaCap = 0;
+	staminaRegen = 0;
+	moveSpeed = 0;
+	damage = 0;
+	bulletSpeed = 0;
+	bulletSize = 0;
+	bulletDuration = 0;
+	ammo = 0;
+	fireRate = 0;
+	inaccuracy = 0;
+	magSize = 0;
+	reloadTime = 0;
+}
 
-	std::map<std::string, GearPiece>::iterator it;
-	for (it = m_gearItems.begin(); it != m_gearItems.end(); it++)
+combatModule::combatModule(): Serializable()
+{
+}
+
+void combatModule::processEffects(float timeDelta) {
+	for (size_t i = 0; i < effects.size(); i++)
 	{
-
-		editFile << "gearPiece" << ";" << 0 << ";" << 0 << ";"
-			<< it->first << ";"
-			<< it->second.dModule.hitPoinCap << ";"
-			<< it->second.dModule.moveSpeed << ";"
-			<< it->second.dModule.manaCap << ";"
-			<< it->second.dModule.weight << ";"
-			<< it->second.aModule.bulletDuration << ";"
-			<< it->second.aModule.bulletSpeed << ";"
-			<< it->second.aModule.fireRate << ";"
-			<< it->second.aModule.inaccuracy << ";"
-			<< it->second.aModule.pushBackStrength << ";"
-			<< it->second.aModule.bulletSize << ";"
-			<< it->second.aModule.magSize << ";"
-			<< it->second.aModule.reloadTime << ";"
-            << it->second.aModule.igniteDamage << ";"
-            << it->second.aModule.frozenAttackCardsIntroduced << ";"
-            << it->second.aModule.moveSpeedReduction << ";"
-			<< it->second.goldValue << ";"
-			<< it->second.name << ";"
-			<< Animator::getInstance().getTextureFileName(it->second.tex.textureID) << ";"
-			<< it->second.tex.scale << ";";
-		editFile << std::endl;
-		for (size_t o = 0; o < it->second.aModule.attackCards.size(); o++)
+		float minDuration = std::min(timeDelta, effects[i].duration);
+		switch (effects[i].eType)
 		{
-			editFile << "attackCard" << ";"
-				<< it->first << ";"
-				<< it->second.aModule.attackCards[o].damage << ";"
-				<< it->second.aModule.attackCards[o].damageDoneToSelf << ";"
-				<< it->second.aModule.attackCards[o].deletesAfterUse << ";"
-				<< it->second.aModule.attackCards[o].pen << ";"
-				<< it->second.aModule.attackCards[o].ignites << ";"
-				<< it->second.aModule.attackCards[o].freezes << ";"
-				<< it->second.aModule.attackCards[o].roots << ";";
-			auto tempAttackbehaviours = it->second.aModule.attackCards[o].getAttackBehaviours();
-			for (size_t i = 0; i < tempAttackbehaviours.size(); i++)
-			{
-				editFile << tempAttackbehaviours[i].name << ",;";
-				//TODO: add if else statements for each beahviour, taking data from the attackBehaviours struct and writing it accordingly(as data is loaded only if needed,
-				//i.e if behaviour A needs 3 ints and 5 ints are provided in the field the last two ints would not be loaded in to the struct object, regardless of wether the struct has and need 5 fields to be initialized)
+		case staminaRegenEffect:
+			stamina += effects[i].amount * minDuration;
+			if (stamina > 100) {
+				stamina = 100;
 			}
-			editFile << std::endl;
+			break;
+		case damageOverTimeEffect:
+			hitpoints -= effects[i].amount * minDuration;
+			break;
+		case rootEffect:
+			if (!effects[i].active) {
+				effects[i].originalAmount = moveSpeed;
+				moveSpeed -= effects[i].amount;
+				effects[i].active = true;
+			}
+			break;
+		default:
+			break;
 		}
-		size_t p = 0;
-		for (p = 0; p < it->second.dModule.defenceCards.size(); p++)
-		{
-			editFile << "defenceCard" << ";"
-				<< it->first << ";"
-				<< it->second.dModule.defenceCards[p].addedDamage << ";"
-				<< it->second.dModule.defenceCards[p].armor << ";"
-				<< it->second.dModule.defenceCards[p].copiesCreatedAfterUse << ";"
-				<< it->second.dModule.defenceCards[p].damageReduction << ";"
-				<< it->second.dModule.defenceCards[p].deletesAfterUse << ";"
-				<< it->second.dModule.defenceCards[p].duplicatesAttacks << ";"
-				<< it->second.dModule.defenceCards[p].extraAttack << ";"
-				<< it->second.dModule.defenceCards[p].healingOnHit << ";"
-				<< it->second.dModule.defenceCards[p].isRemovable << ";"
-				<< it->second.dModule.defenceCards[p].mitigatedDamage << ";"
-				<< it->second.dModule.defenceCards[p].removedCardsAfterUse << ";";
-			editFile << std::endl;
+		effects[i].duration -= timeDelta;
+		if (effects[i].duration <= 0) {
+			if (effects[i].eType == rootEffect) {
+				moveSpeed = effects[i].originalAmount;
+			}
+			effects.erase(effects.begin() + i);
 		}
-
 	}
-	editFile.close();
-}
-
-void Gear::addGearPiece(GearPiece gearPiece)
-{
-	m_gearItems[gearPiece.type] = gearPiece;
-}
-
-std::map<std::string, GearPiece> Gear::getGearItems() const
-{
-	return m_gearItems;
-}
-
-bool Gear::removeGearPiece(std::string gearPieceType)
-{
-	bool retVal;
-	if (m_gearItems.find(gearPieceType) == m_gearItems.end()) {
-		// not found
-		retVal = false;
-	}
-	else {
-		retVal = true;
-		// found
-	}
-	m_gearItems.erase(gearPieceType);
-	return retVal;
 
 }
 
-
-void Gear::assignGear(unit *aunit, bool heal)
+void GearPiece::createFrom(const decomposedData&)
 {
-	AttackModule *Amodule = new AttackModule(true);
-	DefenceModule *Dmodule = new DefenceModule(true);
-
-	std::map<std::string, GearPiece>::iterator it;
-	for (it = m_gearItems.begin(); it != m_gearItems.end(); it++)
-	{
-		for (size_t o = 0; o < it->second.aModule.attackCards.size(); o++)
-		{
-			Amodule->attackCards.push_back(it->second.aModule.attackCards[o]);
-		}
-		for (size_t o = 0; o < it->second.dModule.defenceCards.size(); o++)
-		{
-			Dmodule->defenceCards.push_back(it->second.dModule.defenceCards[o]);
-		}
-		Amodule->bulletDuration += it->second.aModule.bulletDuration;
-		Amodule->bulletSpeed += it->second.aModule.bulletSpeed;
-		Amodule->fireRate += it->second.aModule.fireRate;
-		Amodule->inaccuracy += it->second.aModule.inaccuracy;
-		Amodule->pushBackStrength += it->second.aModule.pushBackStrength;
-		Amodule->bulletSize += it->second.aModule.bulletSize;
-        Amodule->magSize += it->second.aModule.magSize;
-        Amodule->reloadTime += it->second.aModule.reloadTime;
-        Amodule->fireRate += it->second.aModule.fireRate;
-
-        Amodule->igniteDamage += it->second.aModule.igniteDamage;
-        Amodule->frozenAttackCardsIntroduced += it->second.aModule.frozenAttackCardsIntroduced;
-        Amodule->moveSpeedReduction += it->second.aModule.moveSpeedReduction;
-
-		Dmodule->damageTakenPerSecond += it->second.dModule.damageTakenPerSecond;
-		Dmodule->hitPoinCap += it->second.dModule.hitPoinCap;
-		Dmodule->moveSpeed += it->second.dModule.moveSpeed;
-		Dmodule->manaCap += it->second.dModule.manaCap;
-		Dmodule->weight += it->second.dModule.weight;
-	}
-	if (heal) {
-		Dmodule->hitPoints = Dmodule->hitPoinCap;
-		Dmodule->damageTakenPerSecond = 0;
-		Dmodule->mana = Dmodule->manaCap;
-	}
-
-	if (aunit->Amodule != nullptr) {
-		delete aunit->Amodule;
-	}
-	if (aunit->Dmodule != nullptr) {
-		if (!heal) {
-			Dmodule->hitPoints = aunit->Dmodule->hitPoints;
-			Dmodule->damageTakenPerSecond = aunit->Dmodule->damageTakenPerSecond;
-		}
-
-		delete aunit->Dmodule;
-	}
-
-	aunit->Amodule = Amodule;
-	aunit->Dmodule = Dmodule;
 }
 
-Gear::~Gear()
+decomposedData GearPiece::serialize()
 {
+	decomposedData tempDData;
+	tempDData.type = "GearPiece";
+	tempDData.name = name;
+	tempDData.data.push_back(std::to_string(type));
+	return tempDData;
+}
+
+void GearPiece::equipGearPiece(combatModule *target) const
+{
+	target->hitpointCap += cModule.hitpointCap;
+	target->hitpointRegen += cModule.hitpointRegen;
+	target->psiPointCap += cModule.psiPointCap;
+	target->psiPointRegen += cModule.psiPointRegen;
+	target->staminaCap += cModule.staminaCap;
+	target->staminaRegen += cModule.staminaRegen;
+	target->moveSpeed += cModule.moveSpeed;
+	target->weight += cModule.weight;
+	target->damage += cModule.damage;
+	if (cModule.isMelee) {
+		target->isMelee = true;
+	}
+	target->bulletSpeed += cModule.bulletSpeed;
+	target->bulletSize += cModule.bulletSize;
+	target->bulletDuration += cModule.bulletDuration;
+	target->fireRate += cModule.fireRate;
+	target->inaccuracy += cModule.inaccuracy;
+	target->magSize += cModule.magSize;
+	target->reloadTime += cModule.reloadTime;
+}
+
+void GearPiece::unequipGearPiece(combatModule *target) const
+{
+	target->hitpointCap -= cModule.hitpointCap;
+	target->hitpointRegen -= cModule.hitpointRegen;
+	target->psiPointCap -= cModule.psiPointCap;
+	target->psiPointRegen -= cModule.psiPointRegen;
+	target->staminaCap -= cModule.staminaCap;
+	target->staminaRegen -= cModule.staminaRegen;
+	target->moveSpeed -= cModule.moveSpeed;
+	target->weight -= cModule.weight;
+	target->damage -= cModule.damage;
+	if (cModule.isMelee) {
+		target->isMelee = false;
+	}
+	target->bulletSpeed -= cModule.bulletSpeed;
+	target->bulletSize -= cModule.bulletSize;
+	target->bulletDuration -= cModule.bulletDuration;
+	target->fireRate -= cModule.fireRate;
+	target->inaccuracy -= cModule.inaccuracy;
+	target->magSize -= cModule.magSize;
+	target->reloadTime -= cModule.reloadTime;
 }
 
 GearPiece::~GearPiece()
@@ -186,42 +146,5 @@ GearPiece::~GearPiece()
 GearPiece GearPiece::makeGearPiece(std::vector<std::string> tokens)
 {
 
-	DefenceModule Dmodule = DefenceModule(true);
-	AttackModule Amodule = AttackModule(true);
-	Dmodule.hitPoinCap = std::atof(tokens[4].c_str());
-	Dmodule.hitPoints = 0;
-	Dmodule.moveSpeed = std::atof(tokens[5].c_str());
-	Dmodule.manaCap = std::atof(tokens[6].c_str());
-	Dmodule.mana = 0;
-	Dmodule.weight = std::atof(tokens[7].c_str());
-	Amodule.bulletDuration = std::atof(tokens[8].c_str());
-	Amodule.bulletSpeed = std::atof(tokens[9].c_str());
-	Amodule.fireRate = std::atof(tokens[10].c_str());
-	Amodule.inaccuracy = std::atof(tokens[11].c_str());
-	Amodule.pushBackStrength = std::atof(tokens[12].c_str());
-	Amodule.bulletSize =std::atof(tokens[13].c_str());
-	Amodule.magSize = std::atof(tokens[14].c_str());
-	Amodule.reloadTime = std::atof(tokens[15].c_str());
-
-	Amodule.igniteDamage = std::atof(tokens[16].c_str());
-	Amodule.frozenAttackCardsIntroduced = std::atoi(tokens[17].c_str());
-	Amodule.moveSpeedReduction = std::atof(tokens[18].c_str());
-
-
-	GearPiece tempGearPiece;
-	tempGearPiece.aModule = Amodule;
-	tempGearPiece.dModule = Dmodule;
-	tempGearPiece.type = tokens[3];
-	tempGearPiece.goldValue = std::atoi(tokens[19].c_str());
-
-	if (tokens.size() > 20) {
-		tempGearPiece.name = tokens[20];
-	}
-	if (tokens.size() > 21) {
-		tempGearPiece.tex.textureID = Animator::getInstance().getTextureID(tokens[21]);
-	}
-	if (tokens.size() > 22) {
-		tempGearPiece.tex.scale = std::atof(tokens[22].c_str());
-	}
-	return tempGearPiece;
+	
 }

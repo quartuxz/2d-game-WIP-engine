@@ -4,7 +4,7 @@
 
 void Logger::pv_processMessage(const MessageData &message, MessageBus *bus) {
 	MessageData tempMessage = message;
-	std::cout << tempMessage.serialize().serialize() << std::endl;
+	//std::cout << tempMessage.serialize().serialize() << std::endl;
 }
 
 Logger::Logger()

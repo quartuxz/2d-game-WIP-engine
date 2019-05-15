@@ -13,6 +13,9 @@ struct AnimatorSprite {
 	bool offsets = false;
 	bool isActive = true;
 
+	bool usesVectorScale = false;
+	sf::Vector2f vectorScale = sf::Vector2f(1,1);
+
 	float rotation = 0;
 	float scale = 1;
 	sf::Vector2f position = sf::Vector2f(0, 0);

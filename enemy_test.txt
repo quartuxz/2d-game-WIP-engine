@@ -1,7 +1,4 @@
 animatorTexture;enemyAI.png;
 
 unit;0;0;25;10;enemyAI.png;defaultScript;
-gear;0;-;-;100;20;100;10;2;100;2;20;0;4;3;3;0;0;0;0;-;-;-;
-attackCard;0;0;0;0;1;0;0;0;destroyBeahvoiur,1,2,5,1;
-defenceCard;0;0;1;0;1;0;0;0;0;0;0;0;
 bulletTexture;bullet.png;0;
