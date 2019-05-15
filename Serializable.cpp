@@ -93,7 +93,7 @@ decomposedData &decomposedData::addData(std::string addedData){
     return *this;
 }
 
-decomposedData &decomposedData::addChildrenObject(decomposedData childrenObject){
+decomposedData &decomposedData::addChildrenObject(const decomposedData &childrenObject){
     childrenObjects.push_back(childrenObject);
     return *this;
 }

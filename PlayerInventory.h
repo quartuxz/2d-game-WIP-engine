@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <stack>
+#include <queue>
 #include <map>
 #include "Serializable.h"
 #include "Gear.h"
@@ -8,16 +8,16 @@
 #include "ToolTip.h"
 
 
-
+//TODO: finish UI
 class PlayerInventory : public Menu, public Serializable
 {
 private:
 	std::map<gearTypes, GearPiece> m_playerGear;
 	std::vector<inventoryItem> m_items;
 
-	std::stack<ToolTip> m_toDrawToolTips;
+	ToolTip *m_toDrawToolTip = nullptr;
 
-	size_t m_maxColumns = 5;
+	size_t m_maxColumns = 10;
 	size_t m_maxRows = 5;
 	void pv_onClick(MenuItem*, size_t, bool)override;
 	//use only when sure the gear piece in the slot wont be detroyed but insted switched
@@ -35,11 +35,14 @@ public:
 	void setMaxColumns(size_t);
 	size_t getMaxColumns()const;
 
+
+	inventoryItem removeItem(size_t);
+
 	void removeAmmo(size_t);
 	void addAmmo(size_t);
 
 	//please include a texture to display
-	size_t addItemToInventory(inventoryItem);
+	size_t addItemToInventory(inventoryItem&);
 	size_t addItemToInventory(const GearPiece&);
 	inventoryItem equipInventoryItem(inventoryItem);
 

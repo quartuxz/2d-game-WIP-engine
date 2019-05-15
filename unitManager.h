@@ -57,6 +57,8 @@ private:
 
 	std::vector<std::pair<sf::Vector2f, GearPiece>> m_mapGearPieces;
 
+	std::vector<std::pair<sf::Vector2f, inventoryItem>> m_mapItems;
+
 	float m_pickUpDistance = 100;
 
 	std::vector<std::pair<GearPiece, unsigned int>> m_lootTable;
@@ -78,7 +80,7 @@ private:
 	endLevelTypes m_levelHasEnded = levelActive;
 	std::string m_progressionFileName;
 
-	const float toolTipReadDistance = 100;
+	const float m_toolTipReadDistance = 100;
 	bool m_showToolTips = true;
 	std::vector<std::pair<ToolTip*, bool>> m_toolTips;
 
@@ -117,6 +119,10 @@ public:
 	bool areToolTipsShown()const;
 
 	void removeToolTip(unsigned int);
+
+	//todo: implement item pick up and storage
+	void placeItem(const inventoryItem&, sf::Vector2f);
+	inventoryItem pickUpItem();
 
 	void setProgressionFile(std::string);
 

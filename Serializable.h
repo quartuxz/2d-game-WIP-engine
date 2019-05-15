@@ -40,12 +40,22 @@ struct decomposedData{
         std::string getMushedData()const;
 
 		//returns null if not found
+		static decomposedData *searchAndGetArg(std::vector<decomposedData> *arg, std::string objName) {
+			for (size_t i = 0; i < arg->size(); i++) {
+				if (arg->operator[](i).name == objName) {
+					return &arg->operator[](i);
+				}
+			}
+			return nullptr;
+		}
+
+		//returns null if not found
 		decomposedData *getChildByName(std::string);
         //for constructing a decomposedData object inline
         decomposedData &setType(std::string);
         decomposedData &setName(std::string);
         decomposedData &addData(std::string);
-        decomposedData &addChildrenObject(decomposedData);
+        decomposedData &addChildrenObject(const decomposedData&);
 };
 
 

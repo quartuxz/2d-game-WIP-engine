@@ -20,6 +20,19 @@ void HUDMenu::createStaticMenuLayout()
 	MenuItem tempMenuItem(sf::Rect<float>(sf::Vector2f(0 * m_window->getSize().x, 1 * m_window->getSize().y), sf::Vector2f(0.2 * m_window->getSize().x, 0.5 * m_window->getSize().y)));
 	m_menuItems.push_back(tempMenuItem);
 
+	sf::Vector2f individualHotbarSize = sf::Vector2f(0.06, 0.06);
+	size_t hotbarSlotsNumber = 10;
+
+	for (size_t i = 0; i < hotbarSlotsNumber; i++)
+	{
+		MenuItem hotbarMenuItem(sf::Rect<float>(getPixelCoordinate(sf::Vector2f(individualHotbarSize.x*i, 0)), getPixelCoordinate(individualHotbarSize)));
+		AnimatorSprite hotbarMenuItemTex;
+		hotbarMenuItemTex.textureID = Animator::getInstance().getTextureID("Inventory-Slot (Empty).png");
+		hotbarMenuItem.setTexture(hotbarMenuItemTex);
+		hotbarMenuItem.setButtonText(std::to_string(i), 0, sf::Color::Blue, 0);
+		m_menuItems.push_back(hotbarMenuItem);
+	}
+
 	//m_availablePotions.setTexture();
 	m_updatePotions(0);
 }
@@ -93,7 +106,7 @@ void GameMain::m_loadLevelGameMainBits(std::string fileName) {
 			}
 			else if (tokens[0] == "interactable") {
 				if (tokens[1] == "market") {
-					MarketMenu* tempMarketMenu = new MarketMenu(&m_window);
+					MarketMenu* tempMarketMenu = new MarketMenu(m_window);
 					tempMarketMenu->createStaticMenuLayout();
 					m_currentLevel->addInteractable(tempMarketMenu, sf::Vector2f(std::atof(tokens[2].c_str()) * m_currentLevel->getLevelScale(), std::atof(tokens[3].c_str()) * m_currentLevel->getLevelScale()));
 				}
@@ -135,9 +148,17 @@ void GameMain::m_setActiveLevel()
 
 void GameMain::spawnWindow(std::string fontFile)
 {
-	m_window.create(sf::VideoMode(1200, 1000), "SFML works!");
-	m_window.setFramerateLimit(60);
-	m_gameMenus["inventory"] = new PlayerInventory(&m_window);
+
+	//m_window = new sf::RenderWindow();
+	//m_window->create(sf::VideoMode(1200, 1000), "SFML works!");
+	//m_window->setFramerateLimit(60);
+
+	m_inputManager.launchWindowIOThread();
+	m_window = m_inputManager.getWindow();
+	m_window->setActive(true);
+
+	m_playerInventory = new PlayerInventory(m_window);
+	m_gameMenus["inventory"] = m_playerInventory;
 	m_gameMenus["inventory"]->createStaticMenuLayout();
 	GearPiece tempGearPiece;
 	tempGearPiece.cModule = combatModule(true);
@@ -146,17 +167,17 @@ void GameMain::spawnWindow(std::string fontFile)
 	gearASprite.textureID = Animator::getInstance().getTextureID("chestpiece.png");
 	tempGearPiece.tex = gearASprite;
 	tempGearPiece.type = chestPiece;
-	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addItemToInventory(tempGearPiece);
-	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addAmmo(10);
+	m_playerInventory->addItemToInventory(tempGearPiece);
+	m_playerInventory->addAmmo(100);
 	gearASprite.textureID = Animator::getInstance().getTextureID("player.png");
 	tempGearPiece.tex = gearASprite;
 	tempGearPiece.cModule.moveSpeed = -100;
-	dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->addItemToInventory(tempGearPiece);
+	m_playerInventory->addItemToInventory(tempGearPiece);
 	//Animator::getInstance().setWindow(&m_window);
 	//Animator::getInstance().addTexture("player.png");
-	m_gameMenus["HUD"] = new HUDMenu(&m_window);
+	m_gameMenus["HUD"] = new HUDMenu(m_window);
 	m_gameMenus["HUD"]->createStaticMenuLayout();
-	Animator::getInstance().setWindow(&m_window);
+	Animator::getInstance().setWindow(m_window);
 	ToolTip::init(fontFile);
 }
 
@@ -172,7 +193,7 @@ void GameMain::startLevel(unsigned int activeLevel)
 
 	m_activeLevel = activeLevel;
 	m_setActiveLevel();
-	MarketMenu *tempMenu = new MarketMenu(&m_window);
+	MarketMenu *tempMenu = new MarketMenu(m_window);
 	tempMenu->createStaticMenuLayout();
 	m_currentLevel->addInteractable(tempMenu, sf::Vector2f(0,0));
 	m_currentLevel->startLevel();
@@ -254,7 +275,7 @@ void GameMain::createUIFromFile(std::string fileName)
 			}
 
 
-			m_gameMenus[tokens[1]] = new Menu(&m_window);
+			m_gameMenus[tokens[1]] = new Menu(m_window);
 			m_gameMenus[tokens[1]]->createMenuFromFile(tokens[0]);
 		}
 		fileRead.close();
@@ -282,9 +303,10 @@ void GameMain::onProgramEnd()
 	m_gameBus.notify();
 	m_gameBus.onDestroy();
 
+
 	//m_currentLevel->saveGearProgression();
 	Animator::getInstance().draw();
-	m_window.close();
+	m_window->close();
 }
 
 void GameMain::setProgressionFile(std::string fileName)
@@ -357,7 +379,7 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 	}
 	else if (tempMessage.messageType == "openMenu") {
 		if (tempMessage.messageContents[0].data[1] != "inventory") {
-			Menu* tempMenu = new Menu(&m_window);
+			Menu* tempMenu = new Menu(m_window);
 			tempMenu->createMenuFromFile(tempMessage.messageContents[0].data[0]);
 			m_activeMenu = tempMessage.messageContents[0].data[1];
 			delete m_gameMenus[m_activeMenu];
@@ -392,22 +414,31 @@ void GameMain::pv_processMessage(const MessageData & tempMessage, MessageBus * b
 	}
 }
 
+skillParam makeDashSkill(sf::Vector2f dir) {
+	skillParam retSParam;
+	retSParam.sType = dash;
+	retSParam.castDelay = 0;
+	retSParam.dirUnitVec = dir;
+	retSParam.staminaCost = 20;
+	return retSParam;
+}
+
 void GameMain::gameLoop()
 {
-	MarketMenu tempMenu =  MarketMenu(&m_window);
+	MarketMenu tempMenu =  MarketMenu(m_window);
 	tempMenu.createStaticMenuLayout();
-	m_window.setFramerateLimit(120);
+	m_window->setFramerateLimit(120);
 
 	sf::Vector2f lastPlayerPos = m_currentLevel->getPlayer()->getPosition();
 	sf::View view;
 
-	view.setSize(sf::Vector2f(m_window.getSize()));
-	view.setCenter(sf::Vector2f(m_window.getSize().x / 2, m_window.getSize().y / 2));
+	view.setSize(sf::Vector2f(m_window->getSize()));
+	view.setCenter(sf::Vector2f(m_window->getSize().x / 2, m_window->getSize().y / 2));
 
-	view.move(-sf::Vector2f(m_window.getSize().x / 2, m_window.getSize().y / 2));
+	view.move(-sf::Vector2f(m_window->getSize().x / 2, m_window->getSize().y / 2));
 	view.move(m_currentLevel->getPlayer()->getBody()[0].first);
 
-	m_viewDisplacement += -sf::Vector2f(m_window.getSize().x / 2, m_window.getSize().y / 2);
+	m_viewDisplacement += -sf::Vector2f(m_window->getSize().x / 2, m_window->getSize().y / 2);
 	m_viewDisplacement += m_currentLevel->getPlayer()->getBody()[0].first;
 	sf::Vector2i mousePosition;
 
@@ -418,10 +449,21 @@ void GameMain::gameLoop()
 	float lastDash = 0;
 
 	sf::Texture screenShot;
-	screenShot.create(m_window.getSize().x, m_window.getSize().y);
+	screenShot.create(m_window->getSize().x, m_window->getSize().y);
+
+	inventoryItem mapItem;
+	mapItem.itemASprite.textureID = Animator::getInstance().getTextureID("chestpiece.png");
+	mapItem.itemType = gearPieceType;
+	mapItem.simpleRep.type = chestPiece;
+	mapItem.simpleRep.tex = mapItem.itemASprite;
+	mapItem.itemToolTip.makeTooltipForGear(mapItem.simpleRep);
+	m_currentLevel->placeItem(mapItem, sf::Vector2f(300,300));
+
+	//m_window = m_inputManager.getWindow();
 
 
-	while (m_window.isOpen())
+	std::cout << "mainLoop" << std::endl;
+	while (m_window->isOpen())
 	{
 		m_gameBus.startFrame(currentTime.asSeconds());
 		if (m_gameBus.canMessage()) {
@@ -432,7 +474,7 @@ void GameMain::gameLoop()
 		}
 		
 
-		mousePosition = sf::Mouse::getPosition(m_window);
+		mousePosition = sf::Mouse::getPosition(*m_window);
 		bool mouseClick = false;
 
 		sf::Vector2f dist = sf::Vector2f(mousePosition + sf::Vector2i(m_viewDisplacement)) - (m_currentLevel->getPlayer()->getBody()[0].first);
@@ -452,162 +494,295 @@ void GameMain::gameLoop()
 		lastDash += currentTime.asSeconds();
 
 
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+
+		InputManager::InputEvent inputEvent;
+		while ((inputEvent = m_inputManager.getEvent()).InputEventType != InputManager::noInputEvent) {
+			skillParam* tempSParam;
+			Menu* tempMenu;
+			inventoryItem pickedUpItem;
+			switch (inputEvent.InputEventType)
+			{
+			case InputManager::dashBackward:
+				if (lastDash >= 2) {
+					lastDash = 0;
+					tempSParam = new skillParam();
+					*tempSParam = makeDashSkill(rotate90(sf::Vector2f(0,0), rotate90(sf::Vector2f(0, 0), mouseUnitVec)));
+					m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+				}
+				break;
+			case InputManager::dashForward:
+				if (lastDash >= 2) {
+					lastDash = 0;
+					tempSParam = new skillParam();
+					*tempSParam = makeDashSkill(mouseUnitVec);
+					m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+				}
+				break;
+			case InputManager::dashRight:
+				lastDash = 0;
+				tempSParam = new skillParam();
+				if (mouseUnitVec.y > 0) {
+					*tempSParam = makeDashSkill(rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), mouseUnitVec))));
+				}
+				else {
+					*tempSParam = makeDashSkill(rotate90(sf::Vector2f(0, 0), mouseUnitVec));
+				}
+				m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+				break;
+			case InputManager::dashLeft:
+				if (lastDash >= 2) {
+					lastDash = 0;
+					tempSParam = new skillParam();
+					if (mouseUnitVec.y < 0) {
+						*tempSParam = makeDashSkill(rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), mouseUnitVec))));
+					}
+					else {
+						*tempSParam = makeDashSkill(rotate90(sf::Vector2f(0, 0), mouseUnitVec));
+					}
+					m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+				}
+				break;
+			case InputManager::pickUpKeyPressed:
+				pickedUpItem = m_currentLevel->pickUpItem();
+				if (pickedUpItem.itemType != emptySlot) {
+					m_playerInventory->addItemToInventory(pickedUpItem);
+				}
+				break;
+			case InputManager::dash:
+				if (lastDash >= 2) {
+					lastDash = 0;
+					tempSParam = new skillParam();
+					*tempSParam = makeDashSkill(mouseUnitVec);
+					m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+				}
+				break;
+			case InputManager::showToolTipsKeyPressed:
+				m_currentLevel->setToolTipsShow(!m_currentLevel->areToolTipsShown());
+				break;
+			case InputManager::interactKeyPressed:
+				if (m_activeMenu != "mainMenu") {
+					tempMenu = m_currentLevel->interact(&m_gameBus);
+					if (tempMenu != nullptr) {
+						if (m_activeMenu == "interactable") {
+							m_activeMenu = "";
+						}
+						else {
+							m_activeMenu = "interactable";
+							m_gameMenus[m_activeMenu] = tempMenu;
+							//lastWindowState = m_window->capture();
+
+						}
+					}
+				}
+				break;
+			case InputManager::inventoryKeyPressed:
+				if (m_activeMenu != "inventory") {
+					screenShot.update(*m_window);
+					m_activeMenu = "inventory";
+				}
+				else {
+					m_activeMenu = "";
+				}
+				break;
+			case InputManager::generalKeyReleased:
+				m_currentLevel->getPlayer()->stopMovement();
+				break;
+			case InputManager::windowClosed:
+				m_inputManager.stop();
+				m_window->close();
+				break;
+			case InputManager::escapeKeyPressed:
+				if (m_activeMenu != "mainMenu") {
+					screenShot.update(*m_window);
+					m_activeMenu = "mainMenu";
+					//lastWindowState = m_window->capture();
+				}
+				else {
+					m_activeMenu = "";
+				}
+				break;
+			default:
+				break;
+			}
+		}
+
+		if (m_inputManager.isInputEventActive(InputManager::moveForward)) {
 			//std::cout << "w" << std::endl;
 			m_currentLevel->getPlayer()->applyMoveSpeed(mouseUnitVec);
 		}
 		else
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+		if (m_inputManager.isInputEventActive(InputManager::moveLeft)) {
 			//std::cout << "a" << std::endl;
 			if (mouseUnitVec.y > 0) {
-				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), mouseUnitVec))));
-			}
-			else {
 				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), mouseUnitVec));
 			}
-
+			else {
+				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), mouseUnitVec))));
+			}
 		}
 		else
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+		if (m_inputManager.isInputEventActive(InputManager::moveBackward)) {
 			//std::cout << "s" << std::endl;
 			m_currentLevel->getPlayer()->applyMoveSpeed(sf::Vector2f(-mouseUnitVec.x, -mouseUnitVec.y));
 		}
 		else
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+		if (m_inputManager.isInputEventActive(InputManager::moveRight)) {
 			//std::cout << "d" << std::endl;
 			if (mouseUnitVec.y > 0) {
-				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), mouseUnitVec));
-			}
-			else {
 				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), rotate90(sf::Vector2f(0, 0), mouseUnitVec))));
 			}
-		}
-		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
-			//std::cout << "gearPickedUP!" << std::endl;
+			else {
+				m_currentLevel->getPlayer()->applyMoveSpeed(rotate90(sf::Vector2f(0, 0), mouseUnitVec));
+			}
+
 			
-			//m_currentLevel->pickUpGear();
-		}
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
-		    unit *tempUnit = m_currentLevel->getClosestAIUnit();
-		    if(tempUnit != nullptr){
-                m_currentLevel->getWeapon()->fire(m_currentLevel->getPlayer()->getUnitVecTo(tempUnit->getBody()[0].first));
-		    }
-
-		}
-		
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) && lastDash >= 2) {
-			lastDash = 0;
-			skillParam *tempSParam = new skillParam();
-			tempSParam->sType = dash;
-			tempSParam->castDelay = 0;
-			tempSParam->dirUnitVec = mouseUnitVec;
-			tempSParam->staminaCost = 50;
-			m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
-		}
-
-		else
-		{
-			//unitManager.getPlayer()->stopMovement();
 		}
 
 
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-			//UnitManagerSingleton::getInstance().requestUpdate();
+		if (m_inputManager.isInputEventActive(InputManager::shoot)) {
 			if (!m_isPaused) {
 				if (m_currentLevel->getPlayer()->cModule.isMelee) {
-					m_currentLevel->getWeapon()->fire(sf::Vector2f(mousePosition)+m_viewDisplacement);
+					m_currentLevel->getWeapon()->fire(sf::Vector2f(mousePosition) + m_viewDisplacement);
 				}
 				else {
 					if (m_currentLevel->getWeapon()->fire(mouseUnitVec)) {
-						dynamic_cast<PlayerInventory*>(m_gameMenus["inventory"])->removeAmmo(1);
+						m_playerInventory->removeAmmo(1);
 					}
 				}
-				
-			}
-			
 
-			
+			}
 			mouseClick = true;
 		}
 
-
-
-
-
-		sf::Event event;
-		while (m_window.pollEvent(event))
-		{
-			
-			if (event.type == sf::Event::Closed)
-				m_window.close();
-			if (event.type == sf::Event::KeyPressed) {
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
-					//std::cout << "gearPickedUP!" << std::endl;
-					MessageData* playerData = new MessageData();
-					playerData->messageType = "interactionKeyPressed";
-					playerData->messageContents.push_back(decomposedData().setName("playerPosition").setType("sf::Vector2f").addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.x)).addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.y)));
-					//playerData->messageContents.push_back();
-					m_gameBus.addMessage(playerData);
-
-					//m_currentLevel->pickUpGear();
-				}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
-					if (m_activeMenu != "mainMenu") {
-						screenShot.update(m_window);
-						m_activeMenu = "mainMenu";
-						//lastWindowState = m_window.capture();
-					}
-					else {
-						m_activeMenu = "";
-					}
-
-				}
-				
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab)) {
-					if (m_activeMenu != "inventory") {
-						screenShot.update(m_window);
-						m_activeMenu = "inventory";
-					}
-					else {
-						m_activeMenu = "";
-					}
-				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
-					if (m_activeMenu != "mainMenu") {
-						Menu *tempMenu = m_currentLevel->interact(&m_gameBus);
-						if (tempMenu != nullptr) {
-							if (m_activeMenu == "interactable") {
-								m_activeMenu = "";
-							}
-							else {
-								m_activeMenu = "interactable";
-								m_gameMenus[m_activeMenu] = tempMenu;
-								//lastWindowState = m_window.capture();
-
-							}
-						}
-					}
-
-				}
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) {
-					//std::cout << "gearPickedUP!" << std::endl;
-					m_currentLevel->setToolTipsShow(!m_currentLevel->areToolTipsShown());
-				}
-			}
-
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
-                //UnitManagerSingleton::getInstance().requestUpdate();
-                m_currentLevel->drinkPotion();
-            }
-
-			if (event.type == sf::Event::KeyReleased) {
-				m_currentLevel->getPlayer()->stopMovement();
-			}
+		if (m_inputManager.isInputEventActive(InputManager::useItem)) {
+			//UnitManagerSingleton::getInstance().requestUpdate();
+			m_currentLevel->drinkPotion();
 		}
+
+
+
+		//DEPRECATED INPUT MANAGEMENT:
+
+		//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+		//	//std::cout << "gearPickedUP!" << std::endl;
+
+
+		//}
+  ////      if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+		////    unit *tempUnit = m_currentLevel->getClosestAIUnit();
+		////    if(tempUnit != nullptr){
+  ////              m_currentLevel->getWeapon()->fire(m_currentLevel->getPlayer()->getUnitVecTo(tempUnit->getBody()[0].first));
+		////    }
+
+		////}
+		//
+		//if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2) && lastDash >= 2) {
+		//	lastDash = 0;
+		//	skillParam *tempSParam = new skillParam();
+		//	tempSParam->sType = dash;
+		//	tempSParam->castDelay = 0;
+		//	tempSParam->dirUnitVec = mouseUnitVec;
+		//	tempSParam->staminaCost = 50;
+		//	m_currentLevel->getWeapon()->addSkillToQueue(tempSParam);
+		//}
+
+		//else
+		//{
+		//	//unitManager.getPlayer()->stopMovement();
+		//}
+
+
+		//if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+		//	//UnitManagerSingleton::getInstance().requestUpdate();
+		//	
+		//}
+
+
+
+
+
+		//sf::Event event;
+		//while (m_window->pollEvent(event))
+		//{
+
+		//	if (event.type == sf::Event::Closed) {
+		//		m_inputManager.stop();
+		//		m_window->close();
+		//	}
+		//		
+		//	if (event.type == sf::Event::KeyPressed) {
+		//		if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+		//			//std::cout << "gearPickedUP!" << std::endl;
+		//			MessageData* playerData = new MessageData();
+		//			playerData->messageType = "interactionKeyPressed";
+		//			playerData->messageContents.push_back(decomposedData().setName("playerPosition").setType("sf::Vector2f").addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.x)).addData(std::to_string(m_currentLevel->getPlayer()->getBody()[0].first.y)));
+		//			//playerData->messageContents.push_back();
+		//			m_gameBus.addMessage(playerData);
+
+		//			//m_currentLevel->pickUpGear();
+		//		}if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
+		//			if (m_activeMenu != "mainMenu") {
+		//				screenShot.update(*m_window);
+		//				m_activeMenu = "mainMenu";
+		//				//lastWindowState = m_window->capture();
+		//			}
+		//			else {
+		//				m_activeMenu = "";
+		//			}
+
+		//		}
+		//		
+		//		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab)) {
+		//			if (m_activeMenu != "inventory") {
+		//				screenShot.update(*m_window);
+		//				m_activeMenu = "inventory";
+		//			}
+		//			else {
+		//				m_activeMenu = "";
+		//			}
+		//		}
+		//		if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+		//			if (m_activeMenu != "mainMenu") {
+		//				Menu *tempMenu = m_currentLevel->interact(&m_gameBus);
+		//				if (tempMenu != nullptr) {
+		//					if (m_activeMenu == "interactable") {
+		//						m_activeMenu = "";
+		//					}
+		//					else {
+		//						m_activeMenu = "interactable";
+		//						m_gameMenus[m_activeMenu] = tempMenu;
+		//						//lastWindowState = m_window->capture();
+
+		//					}
+		//				}
+		//			}
+
+		//		}
+		//		if (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) {
+		//			//std::cout << "gearPickedUP!" << std::endl;
+		//			m_currentLevel->setToolTipsShow(!m_currentLevel->areToolTipsShown());
+		//		}
+		//	}
+
+  //          if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+  //              //UnitManagerSingleton::getInstance().requestUpdate();
+  //              m_currentLevel->drinkPotion();
+  //          }
+
+
+		//	if (event.type == sf::Event::MouseButtonPressed) {
+
+		//	}
+
+		//	if (event.type == sf::Event::KeyReleased) {
+		//		m_currentLevel->getPlayer()->stopMovement();
+		//	}
+		//}
         //std::cout << 1/currentTime.asSeconds() << std::endl;
 
 		//m_gameBus.notify();
 
-		m_window.clear(sf::Color::White);
+		m_window->clear(sf::Color::White);
 
 		if (m_isPaused) {
 
@@ -621,18 +796,19 @@ void GameMain::gameLoop()
 			tempSprite.setTexture(tempTexture);
 			sf::RectangleShape tempRect;
 			tempRect.setFillColor(sf::Color(100,100,100, 100));
-			tempRect.setSize(sf::Vector2f(m_window.getSize()));
+			tempRect.setSize(sf::Vector2f(m_window->getSize()));
 			tempRect.move(m_viewDisplacement);
-			m_window.draw(tempSprite);
-			m_window.draw(capturedBackground);
-			m_window.draw(tempRect);
+			m_window->draw(tempSprite);
+			m_window->draw(capturedBackground);
+			m_window->draw(tempRect);
 		}
 		m_isPaused = runOnce(currentTime.asSeconds(), mousePosition, mouseClick);
 
 
+
 		view.move(m_currentLevel->getPlayer()->getPosition() - lastPlayerPos);
 		m_viewDisplacement += (m_currentLevel->getPlayer()->getPosition() - lastPlayerPos);
-		m_window.setView(view);
+		m_window->setView(view);
 
 		//AnimatorSprite tempSprite = AnimatorSprite::AnimatorSprite(0);
 		//tempSprite.scale = 10;
@@ -652,7 +828,7 @@ void GameMain::gameLoop()
 		//m_gameMenus["HUD"]->draw(m_viewDisplacement);
 
 
-		m_window.display();
+		m_window->display();
 		m_gameBus.endFrame();
 	}
 	
@@ -713,7 +889,7 @@ void GameMain::updateUI(std::string UIName, sf::Vector2i mousePos, bool mouseCli
 bool GameMain::runOnce(float timeDelta, sf::Vector2i mousePos, bool mouseClicked)
 {
 	if (m_activeMenu.empty()) {
-		m_currentLevel->update(timeDelta, m_window, &m_gameBus);
+		m_currentLevel->update(timeDelta, *m_window, &m_gameBus);
 		if (m_currentLevel->hasLevelEnded() == playerDied) {
 			m_currentLevel->setProgressionFile(m_progressionFile);
 			m_currentLevel->saveGearProgression();

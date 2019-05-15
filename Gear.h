@@ -19,7 +19,7 @@ struct effect {
 };
 
 enum gearTypes {
-	helmet, chestPiece
+	helmet, chestPiece, jumpsuit, boots
 };
 
 //todo: implement serialization

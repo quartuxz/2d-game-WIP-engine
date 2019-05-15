@@ -2,7 +2,7 @@ scaleFactor;3;
 worldTextureTile;0;0;0;0;0;1;cryo_area_1.png;
 
 player;50;50;24;20;player.png;
-bulletTexture;bullet.png;-1;
+bulletTexture;bullet_1.png;-1;
 
 //;gameScript;test_GS;
 

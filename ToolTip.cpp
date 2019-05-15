@@ -72,6 +72,7 @@ AnimatorSprite ToolTip::getTexture() const
 
 void ToolTip::makeTooltipForGear(const GearPiece& gearPiece)
 {
+	m_text.clear();
 	std::stringstream ss;
 	ss << "->" << gearPiece.type << std::endl << "HP: " << gearPiece.cModule.hitpointCap << std::endl << "Move Speed: " << gearPiece.cModule.moveSpeed << std::endl
 	   << "fire rate: " << gearPiece.cModule.fireRate << std::endl
@@ -83,6 +84,7 @@ void ToolTip::makeTooltipForGear(const GearPiece& gearPiece)
 	   << "reload time(s): " << gearPiece.cModule.reloadTime << std::endl
 	   << "gold value: " << gearPiece.goldValue << std::endl;
 	sf::Text tempText;
+	tempText.setFillColor(sf::Color::Blue);
 	tempText.setFont(*getFont());
 	tempText.setString(ss.str());
 	tempText.setPosition(sf::Vector2f(15,15));

@@ -11,7 +11,7 @@ enum itemTypes {
 };
 
 struct inventoryItem {
-	itemTypes itemType;
+	itemTypes itemType = emptySlot;
 	std::string serializedObjectRep;
 	GearPiece simpleRep;
 	ToolTip itemToolTip;

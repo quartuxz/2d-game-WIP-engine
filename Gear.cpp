@@ -3,8 +3,9 @@
 #include "Animator.h"
 
 
-void combatModule::createFrom(const decomposedData&)
+void combatModule::createFrom(const decomposedData& DData)
 {
+
 }
 
 decomposedData combatModule::serialize()

@@ -3,6 +3,7 @@
 #ifndef GAMEMAIN_H_EXISTS
 #define GAMEMAIN_H_EXISTS
 #include <vector>
+#include <SFML/Graphics.hpp>
 #include <map>
 #include <stack>
 #include <mutex>
@@ -11,7 +12,7 @@
 #include "MessageBus.h"
 #include "Logger.h"
 #include "PlayerInventory.h"
-
+#include "InputManager.h"
 
 
 
@@ -36,10 +37,13 @@ private:
 	std::vector<std::string> m_gameLevels;
 	unsigned int m_activeLevel = 0;
 	sf::Clock m_clock;
-	sf::RenderWindow m_window;
+	sf::RenderWindow *m_window;
 	std::map<std::string ,Menu*> m_gameMenus;
+	PlayerInventory* m_playerInventory;
 	std::string m_activeMenu = "mainMenu";
 	UnitManager * m_currentLevel = new UnitManager();
+
+	InputManager m_inputManager;
 
 	std::recursive_mutex m_dataLock;
 	//MockMutex m_dataLock;

@@ -420,6 +420,24 @@ void UnitManager::removeToolTip(unsigned int ID)
 	mutexLock.unlock();
 }
 
+void UnitManager::placeItem(const inventoryItem& invItem, sf::Vector2f pos)
+{
+	m_mapItems.push_back(std::make_pair(pos, invItem));
+}
+
+inventoryItem UnitManager::pickUpItem()
+{
+	for (size_t i = 0; i < m_mapItems.size(); i++)
+	{
+		if (vectorDistance(m_mapItems[i].first, m_player->getBody()[0].first) < m_pickUpDistance) {
+			auto retVal = std::move(m_mapItems[i].second);
+			m_mapItems.erase(m_mapItems.begin() + i);
+			return retVal;
+		}
+	}
+	return inventoryItem();
+}
+
 void UnitManager::setProgressionFile(std::string fileName)
 {
 	mutexLock.lock();
@@ -664,21 +682,29 @@ void UnitManager::update(float timeDelta, sf::RenderWindow &window, MessageBus *
 		//window.draw(nonPlayerUnits[i]->getTexture());
 	}
 	//window.draw(m_player->getTexture());
+
+	//drawing map items
 	Animator::getInstance().addOneFrameSprite(m_player->getAnimatorSprite());
 	m_playerWeapon->displayToWindow(window);
-	for (size_t i = 0; i < m_mapGearPieces.size(); i++)
+	for (size_t i = 0; i < m_mapItems.size(); i++)
 	{
+
+		m_mapItems[i].second.itemASprite.position = m_mapItems[i].first;
+		if (vectorDistance(m_mapItems[i].first, m_player->getBody()[0].first) < m_toolTipReadDistance) {
+			m_mapItems[i].second.itemToolTip.setPosition(m_mapItems[i].first);
+			m_mapItems[i].second.itemToolTip.draw(*Animator::getInstance().getWindow());
+		}
 		//m_mapGearPieces[i].second.tex.textureID = Animator::getInstance().getTextureID("chestpiece.png");
-		m_mapGearPieces[i].second.tex.drawLayer = 0;
-		m_mapGearPieces[i].second.tex.position = m_mapGearPieces[i].first;
-		m_mapGearPieces[i].second.tex.scale = 0.5;
-		Animator::getInstance().addOneFrameSprite(m_mapGearPieces[i].second.tex);
+		//m_mapGearPieces[i].second.tex.drawLayer = 0;
+		//m_mapGearPieces[i].second.tex.position = m_mapGearPieces[i].first;
+		//m_mapGearPieces[i].second.tex.scale = 0.5;
+		Animator::getInstance().addOneFrameSprite(m_mapItems[i].second.itemASprite);
 	}
 
 	if (m_showToolTips) {
 		for (size_t i = 0; i < m_toolTips.size(); i++)
 		{
-			if (m_toolTips[i].second && (vectorDistance(m_toolTips[i].first->getPosition(), m_player->getBody()[0].first) < toolTipReadDistance)) {
+			if (m_toolTips[i].second && (vectorDistance(m_toolTips[i].first->getPosition(), m_player->getBody()[0].first) < m_toolTipReadDistance)) {
 				Animator::getInstance().addOneFrameSprite(m_toolTips[i].first);
 			}
 		}

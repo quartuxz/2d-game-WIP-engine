@@ -50,11 +50,15 @@ void PlayerInventory::addAmmo(size_t amount)
 	m_menuItems[slotSelected].setButtonText(std::to_string(m_items[slotSelected].amount), 0.1, sf::Color::White, 0);
 }
 
-size_t PlayerInventory::addItemToInventory(inventoryItem item)
+size_t PlayerInventory::addItemToInventory(inventoryItem& item)
 {
+	if (item.itemType == emptySlot) {
+		throw "trying to add an empty inventoryItem object to inventory!";
+	}
 	for (size_t i = 0; i < m_items.size(); i++)
 	{
 		if (m_items[i].itemType == emptySlot) {
+
 			m_menuItems[i].fitASpriteToItem(&item.itemASprite);
 			//item.itemASprite.position = m_menuItems[i].getPosition();
 			
@@ -92,16 +96,21 @@ void PlayerInventory::onDraw(bool beforeDraw, sf::Vector2f displacement)
 			Animator::getInstance().instantDraw(x.second.tex);
 			x.second.tex.position -= displacement;
 		}
-		while (!m_toDrawToolTips.empty()) {
-			m_toDrawToolTips.top().setPosition(m_toDrawToolTips.top().getPosition() + displacement);
-			m_toDrawToolTips.top().draw(*m_window);
-			m_toDrawToolTips.pop();
+		if (m_toDrawToolTip != nullptr) {
+			m_toDrawToolTip->setPosition(m_toDrawToolTip->getPosition() + displacement);
+			m_toDrawToolTip->draw(*m_window);
+			m_toDrawToolTip = nullptr;
 		}
+		
 	}
 }
 
 void PlayerInventory::createStaticMenuLayout()
 {
+
+	sf::Vector2f invStart = sf::Vector2f(0.35, 0.35);
+	sf::Vector2f menuItemSize = sf::Vector2f(0.06, 0.06);
+
 	for (size_t i = 0; i < m_maxColumns; i++)
 	{
 		for (size_t o = 0; o < m_maxRows; o++)
@@ -111,7 +120,7 @@ void PlayerInventory::createStaticMenuLayout()
 			inventoryItem tempInventoryItem;
 			tempInventoryItem.itemType = emptySlot;
 			m_items.push_back(tempInventoryItem);
-			MenuItem tempMenuItem(sf::FloatRect(getPixelCoordinate(sf::Vector2f(float(i)/m_maxColumns/3.1 + 0.45,float(o)/m_maxRows/3.1 + 0.35)), getPixelCoordinate(sf::Vector2f(0.05,0.05))));
+			MenuItem tempMenuItem(sf::FloatRect(getPixelCoordinate(sf::Vector2f(float(i)*menuItemSize.x + invStart.x,float(o)*menuItemSize.y + invStart.y)), getPixelCoordinate(menuItemSize)));
 			AnimatorSprite tempASprite;
 			tempASprite.textureID = Animator::getInstance().getTextureID("Inventory-Slot (Empty).png");
 			tempMenuItem.setTexture(tempASprite);
@@ -120,19 +129,35 @@ void PlayerInventory::createStaticMenuLayout()
 		}
 	}
 	//helmet m_maxColumns*m_maxRows + 1
-	MenuItem helmetSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(0.2,0.2)), getPixelCoordinate(sf::Vector2f(0.05, 0.05))));
-	
+	MenuItem helmetSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(invStart.x-menuItemSize.x, invStart.y)), getPixelCoordinate(menuItemSize)));
+	AnimatorSprite helmetSlotASprite;
+	helmetSlotASprite.textureID = Animator::getInstance().getTextureID("Inventory-Helmet.png");
+	helmetSlot.setTexture(helmetSlotASprite);
 	m_menuItems.push_back(helmetSlot);
 
 	//chestPiece
-	MenuItem chestpieceSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(0.15, 0.35)), getPixelCoordinate(sf::Vector2f(0.05, 0.05))));
+	MenuItem chestpieceSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(invStart.x- menuItemSize.x, invStart.y + menuItemSize.y)), getPixelCoordinate(menuItemSize)));
 	AnimatorSprite chestPieceSlotASprite;
 	chestPieceSlotASprite.textureID = Animator::getInstance().getTextureID("Inventory-Chest Armor.png");
 	chestpieceSlot.setTexture(chestPieceSlotASprite);
 	m_menuItems.push_back(chestpieceSlot);
 
+
+	MenuItem jumpSuitSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(invStart.x- menuItemSize.x, invStart.y + menuItemSize.y*2)), getPixelCoordinate(menuItemSize)));
+	AnimatorSprite jumpSuitSlotASprite;
+	jumpSuitSlotASprite.textureID = Animator::getInstance().getTextureID("Inventory-Jumpsuit.png");
+	jumpSuitSlot.setTexture(jumpSuitSlotASprite);
+	m_menuItems.push_back(jumpSuitSlot);
+
+
+	MenuItem bootsSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(invStart.x- menuItemSize.x, invStart.y + menuItemSize.y*3)), getPixelCoordinate(menuItemSize)));
+	AnimatorSprite bootsSlotASprite;
+	bootsSlotASprite.textureID = Animator::getInstance().getTextureID("Inventory-Boots.png");
+	bootsSlot.setTexture(bootsSlotASprite);
+	m_menuItems.push_back(bootsSlot);
+
 	//weapon
-	MenuItem weaponSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(0.05, 0.35)), getPixelCoordinate(sf::Vector2f(0.05, 0.05))));
+	MenuItem weaponSlot(sf::FloatRect(getPixelCoordinate(sf::Vector2f(0.05, 0.55)), getPixelCoordinate(menuItemSize)));
 
 	m_menuItems.push_back(weaponSlot);
 
@@ -220,7 +245,7 @@ void PlayerInventory::pv_onClick(MenuItem *clickedMenuItem, size_t clickedMenuIt
 				tempASprite.textureID = Animator::getInstance().getTextureID("tooltip.png");
 				m_items[clickedMenuItemIndex].itemToolTip.setTexture(tempASprite);
 				m_items[clickedMenuItemIndex].itemToolTip.setPosition(m_menuItems[clickedMenuItemIndex].getPosition() + m_menuItems[clickedMenuItemIndex].getDimension());
-				m_toDrawToolTips.push(m_items[clickedMenuItemIndex].itemToolTip);
+				m_toDrawToolTip = &m_items[clickedMenuItemIndex].itemToolTip;
 			}
 		}
 		

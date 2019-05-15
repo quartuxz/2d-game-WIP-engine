@@ -55,21 +55,25 @@ void Map::update(unit *units)
 			float dist = minimum_distance(walls[o].wall.first, walls[o].wall.second, body[p].first, &proj);
 			//this if checks for collision with wall
 			if (dist < body[p].second) {
+				if (LineSegementsIntersect(units->lastPos, body[p].first, walls[o].wall.first, walls[o].wall.second, &intersectMovePoint)) {
+					units->setPosition(units->lastLastPos);
+					//units->stopMovement();
+				}
 				//this if checks if the object is on the correct side of the wall, else, it transports(deprecated after the comma) it to the correct side upon collsiion.
 				if (distanceSquared(walls[o].inside, body[p].first) < distanceSquared(walls[o].getOutside(), body[p].first)) {
+
 					float dist2 = sqrt(pow(body[p].first.x - proj.x, 2) + pow(body[p].first.y - proj.y, 2));
 					units->move(sf::Vector2f(((body[p].first.x - proj.x) / dist2) * (body[p].second - dist), ((body[p].first.y - proj.y) / dist2) * (body[p].second - dist)));
 					//units->hitsWall(sf::Vector2f(((body[p].first.x - proj.x) / dist2) * (body[p].second - dist), ((body[p].first.y - proj.y) / dist2) * (body[p].second - dist)));
 				}
+				
 				//deprecated walls transportation
 				//else {
 				//	sf::Vector2f reflected = reflect(walls[o].wall.first, walls[o].wall.second, body[p].first);
 				//	units->move(reflected - body[p].first);
 				//	//units->hitsWall(reflected - body[p].first);
 				//}
-				if (LineSegementsIntersect(units->lastPos, body[p].first, walls[o].wall.first, walls[o].wall.second, &intersectMovePoint)) {
-					units->setPosition(units->lastLastPos);
-				}
+				
 			}
 		}
 	}

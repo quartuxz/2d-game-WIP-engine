@@ -162,12 +162,22 @@ bool MessageBus::canMessage() {
 	return false;
 }
 
+void MessageBus::m_recursiveJoinAndProcessAll()
+{
+	m_joinThreads();
+	if (!m_messageQueue.empty()) {
+		notify();
+		m_recursiveJoinAndProcessAll();
+	}
+}
+
 void MessageBus::m_joinThreads(){
 	while (!m_threadPool.empty()) {
 		m_threadPool.top()->join();
 		delete m_threadPool.top();
 		m_threadPool.pop();
 	}
+	
 }
 void MessageBus::endFrame() {
 

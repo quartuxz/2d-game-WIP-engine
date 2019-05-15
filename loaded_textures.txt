@@ -2,10 +2,14 @@ texture;blood_01.png;
 texture;player.png;
 texture;enemyAI.png;
 texture;bullet.png;
+texture;bullet_1.png;
 texture;tooltip.png;
 texture;chestpiece.png;
 texture;Inventory-Slot (Empty).png;
+texture;Inventory-Helmet.png;
 texture;Inventory-Chest Armor.png;
+texture;Inventory-Jumpsuit.png; 
+texture;Inventory-Boots.png;
 texture;button.png;
 
 texture;player_back_left_idle.png;

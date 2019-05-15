@@ -58,7 +58,7 @@ class MessageBus
 
     private:
 
-
+		void m_recursiveJoinAndProcessAll();
 		void m_joinThreads();
 
 		std::recursive_mutex m_allMutex;
